@@ -1,0 +1,52 @@
+# ============================================================
+# CustomPanel 语言包（简体中文）
+# 由主插件 SOYSHTTPOverMC 的 I18n 机制加载：
+#   CustomPanel.onEnable → PanelI18n.register → I18n.registerLanguageSource(...)
+# key 统一 custompanel. 前缀（合并进主插件默认作用域，避免与主插件 / MCERP 键冲突）
+# 占位符：{0} {1} ...（与 I18n.t 的 args 对应）
+# ============================================================
+
+# ---------- 通用 ----------
+custompanel.common.add-success: 新增成功
+custompanel.common.edit-success: 修改成功
+custompanel.common.delete-success: 删除成功
+custompanel.common.operation-success: 操作成功
+custompanel.common.refresh-success: 刷新成功
+custompanel.common.not-logged-in: 未登录
+custompanel.common.page-not-found: 所属页面不存在
+
+# ---------- 页面管理 ----------
+custompanel.page.not-found: 页面不存在
+custompanel.page.key-empty: 页面标识不能为空
+custompanel.page.name-empty: 页面名称不能为空
+custompanel.page.key-exists: 页面标识已存在
+custompanel.page.missing-pageId: 缺少 pageId
+custompanel.page.store-mode-invalid: 存储模式非法（仅支持 MANAGED / FREE）
+custompanel.page.managed-need-entity: 托管模式必须指定绑定实体
+
+# ---------- 记录管理（自由模式通用行存储） ----------
+custompanel.record.not-found: 记录不存在
+custompanel.record.missing-recordId: 缺少 recordId
+custompanel.record.data-empty: 数据内容不能为空
+custompanel.record.page-not-free: 仅自由模式页面可写入记录
+
+# ---------- Schema 聚合 ----------
+custompanel.schema.not-found: 页面定义不存在
+
+# ---------- 记录管理（自由模式） ----------
+custompanel.record.not-found: 记录不存在
+custompanel.record.data-empty: 数据内容不能为空
+custompanel.record.page-not-free: 仅自由模式页面可写入记录
+custompanel.record.missing-recordId: 缺少 recordId
+
+# ---------- 日志 ----------
+custompanel.log.plugin-enabled: 已启用（自定义控制面板）
+custompanel.log.plugin-disabled: 已禁用
+custompanel.log.expansion-register-fail: 面板扩展注册失败（identifier 冲突 / SOYS 未就绪）-> {0}
+custompanel.log.expansion-registered: 面板扩展注册完成 -> {0}
+custompanel.log.soys-not-ready: SOYSHTTPOverMC 未就绪，等待 SoysReadyEvent 兜底注册
+custompanel.log.mcerp-not-ready: MCERP 未就绪，跳过 ERP 登记（reload 时兜底补登记）-> {0}
+custompanel.log.page-added: 页面已新增 -> {0}
+custompanel.log.page-removed: 页面已删除 -> 字段 {0} 条，动作 {1} 条，记录 {2} 条
+custompanel.log.record-added: 记录已新增 -> pageId {0}，记录 {2} 条
+custompanel.log.record-added: 记录已新增 -> pageId {0}

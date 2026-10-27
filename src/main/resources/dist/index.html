@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CustomPanel</title>
+    <script src="./__SOYS_CONTEXT__.js"></script>
+</head>
+<body>
+<div id="app">
+    <h2>CustomPanel 骨架占位页</h2>
+    <p>后端链路已就绪：页面托管 / 注解式 API / MCERP 模块登记。</p>
+    <p>后续由 MCERP-Vue2-example 改造产物替换本目录（wujie 子应用）。</p>
+    <pre id="ctx"></pre>
+</div>
+<script>
+    document.getElementById('ctx').textContent =
+        'SOYS_CONTEXT = ' + JSON.stringify(window.SOYS_CONTEXT, null, 2);
+</script>
+</body>
+</html>

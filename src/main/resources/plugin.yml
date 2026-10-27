@@ -1,0 +1,40 @@
+name: CustomPanel
+version: '${project.version}'
+main: com.github.cocosoys.mc.custompanel.CustomPanel
+author: cocosoys
+description: Fully customizable server control panel, mounted as an MCERP module over the SOYSHTTPOverMC HTTP-over-MC tunnel.
+# 硬依赖：定位为「纯 MCERP 模块」——菜单、路由、鉴权与侧边栏入口全部由 MCERP 中控提供，
+# 缺席则本插件无宿主，故声明为 depend（Bukkit 保证其先于本插件启用，且缺席时直接拒绝启用）。
+# SOYSHTTPOverMC 提供网关 / 页面托管 / API 注册 / ORM。
+depend: [SOYSHTTPOverMC, MCERP]
+permissions:
+  custompanel.page.list:
+    description: 页面列表
+    default: op
+  custompanel.page.query:
+    description: 页面查询
+    default: op
+  custompanel.page.add:
+    description: 新增页面
+    default: op
+  custompanel.page.edit:
+    description: 编辑页面
+    default: op
+  custompanel.page.remove:
+    description: 删除页面
+    default: op
+  custompanel.record.list:
+    description: 记录列表
+    default: op
+  custompanel.record.query:
+    description: 记录查询
+    default: op
+  custompanel.record.add:
+    description: 新增记录
+    default: op
+  custompanel.record.edit:
+    description: 修改记录
+    default: op
+  custompanel.record.remove:
+    description: 删除记录
+    default: op
