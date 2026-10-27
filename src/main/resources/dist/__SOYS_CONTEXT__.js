@@ -5,6 +5,7 @@
 //     "apiFullPrefix":"/api/plugins/CustomPanel",
 //     "pageFullPrefix":"/web/plugins/CustomPanel",
 //     "webResourcePrefix":"web/plugins/CustomPanel/page/" }
+// （旧字段 fullPrefix / pagePrefix 已由 apiFullPrefix / pageFullPrefix 取代）
 // 换服务器 / 改 api-prefix 后无需改动任何前端代码，重新请求即自动适配。
 window.SOYS_CONTEXT = typeof __SOYS_CONTEXT__ !== 'undefined' ? __SOYS_CONTEXT__ : null;
 
