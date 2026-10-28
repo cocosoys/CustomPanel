@@ -82,6 +82,10 @@ public class PanelFieldServiceImpl implements IPanelFieldService {
         if (field.getPageId() == null || DATA.get(PanelPage.class, field.getPageId()) == null) {
             return AjaxResult.error(t("custompanel.common.page-not-found", "所属页面不存在"));
         }
+        // 同页字段键唯一（忽略大小写）：重复会导致渲染器列冲突与数据覆盖
+        if (findByKey(field.getPageId(), key, null) != null) {
+            return AjaxResult.error(t("custompanel.field.key-exists", "字段键已存在"));
+        }
         PanelField f = new PanelField();
         f.setPageId(field.getPageId());
         f.setFieldKey(key);
@@ -109,7 +113,20 @@ public class PanelFieldServiceImpl implements IPanelFieldService {
             return AjaxResult.error(t("custompanel.field.not-found", "字段不存在"));
         }
         if (field.getFieldKey() != null && !field.getFieldKey().trim().isEmpty()) {
-            f.setFieldKey(field.getFieldKey().trim());
+            String newKey = field.getFieldKey().trim();
+            // 目标页面：更新请求携带新 pageId 则以其为准，否则沿用当前记录所属页
+            Long targetPageId = f.getPageId();
+            if (field.getPageId() != null && !field.getPageId().equals(f.getPageId())) {
+                if (DATA.get(PanelPage.class, field.getPageId()) == null) {
+                    return AjaxResult.error(t("custompanel.common.page-not-found", "所属页面不存在"));
+                }
+                targetPageId = field.getPageId();
+            }
+            // 同页字段键唯一（忽略大小写，排除自身）
+            if (findByKey(targetPageId, newKey, fieldId) != null) {
+                return AjaxResult.error(t("custompanel.field.key-exists", "字段键已存在"));
+            }
+            f.setFieldKey(newKey);
         }
         if (field.getFieldName() != null && !field.getFieldName().trim().isEmpty()) {
             f.setFieldName(field.getFieldName().trim());
@@ -200,6 +217,18 @@ public class PanelFieldServiceImpl implements IPanelFieldService {
     }
 
     // ===== 内部 =====
+
+    /** 同页字段键查重（忽略大小写）；excludeFieldId 非空时排除该字段（修改场景排除自身），命中返回记录。 */
+    private PanelField findByKey(Long pageId, String key, Long excludeFieldId) {
+        for (PanelField f : DATA.select(PanelField.class)) {
+            if (pageId != null && pageId.equals(f.getPageId())
+                    && f.getFieldKey() != null && f.getFieldKey().equalsIgnoreCase(key)
+                    && (excludeFieldId == null || !excludeFieldId.equals(f.getFieldId()))) {
+                return f;
+            }
+        }
+        return null;
+    }
 
     /** 实体 → 展示 VO。 */
     private FieldDefVO toVO(PanelField f) {

@@ -50,7 +50,7 @@ public class PanelExpansion extends McerpExpansion {
     public PanelExpansion(CustomPanel plugin) {
         this.plugin = plugin;
         this.fieldService = new PanelFieldServiceImpl();
-        this.actionService = new PanelActionServiceImpl();
+        this.actionService = new PanelActionServiceImpl(plugin);
         this.recordService = new PanelRecordServiceImpl();
         // 删除页面需级联清理其字段、动作与记录 → 页面服务反向依赖另三个服务
         this.pageService = new PanelPageServiceImpl(fieldService, actionService, recordService);

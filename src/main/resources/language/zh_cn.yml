@@ -30,6 +30,17 @@ custompanel.record.missing-recordId: 缺少 recordId
 custompanel.record.data-empty: 数据内容不能为空
 custompanel.record.page-not-free: 仅自由模式页面可写入记录
 
+# ---------- 字段定义 ----------
+custompanel.field.key-exists: 字段键已存在（同页面内不可重复）
+
+# ---------- 动作定义 ----------
+custompanel.action.key-exists: 动作键已存在（同页面内不可重复）
+custompanel.action.target-empty: 动作目标不能为空
+custompanel.action.execute-queued: 动作已派发执行
+custompanel.action.http-url-invalid: HTTP 动作目标必须是 http/https URL
+custompanel.action.http-url-blocked: HTTP 动作目标被安全策略拒绝（内网/环回地址）
+custompanel.action.internal-path-invalid: INTERNAL 动作目标必须是 / 开头的逻辑路径
+
 # ---------- Schema 聚合 ----------
 custompanel.schema.not-found: 页面定义不存在
 
@@ -48,5 +59,6 @@ custompanel.log.soys-not-ready: SOYSHTTPOverMC 未就绪，等待 SoysReadyEvent
 custompanel.log.mcerp-not-ready: MCERP 未就绪，跳过 ERP 登记（reload 时兜底补登记）-> {0}
 custompanel.log.page-added: 页面已新增 -> {0}
 custompanel.log.page-removed: 页面已删除 -> 字段 {0} 条，动作 {1} 条，记录 {2} 条
-custompanel.log.record-added: 记录已新增 -> pageId {0}，记录 {2} 条
 custompanel.log.record-added: 记录已新增 -> pageId {0}
+custompanel.log.action-executed: 动作已执行 -> {0}（{1}），目标：{2}，结果：{3}
+custompanel.log.action-execute-failed: 动作执行异常 -> {0}，原因：{1}

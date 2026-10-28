@@ -2,6 +2,7 @@ package com.github.cocosoys.mc.custompanel.spring.service;
 
 import com.github.cocosoys.mc.custompanel.spring.entity.PanelAction;
 import com.github.cocosoys.mc.custompanel.spring.entity.vo.ActionDefVO;
+import com.github.cocosoys.mc.custompanel.spring.entity.vo.ActionExecuteRequest;
 import com.github.cocosoys.mc.soyshttpovermc.util.AjaxResult;
 import com.github.cocosoys.mc.soyshttpovermc.util.TableDataInfo;
 import com.github.cocosoys.mc.soyshttpovermc.web.gateway.policy.auth.issuer.CredentialPresentation;
@@ -9,7 +10,7 @@ import com.github.cocosoys.mc.soyshttpovermc.web.gateway.policy.auth.issuer.Cred
 import java.util.List;
 
 /**
- * 动作定义管理服务（抽象契约）：动作元数据的 CRUD 与按页面级联清理。
+ * 动作定义管理服务（抽象契约）：动作元数据的 CRUD、按页面级联清理与执行分派。
  *
  * <p>实现见 {@link com.github.cocosoys.mc.custompanel.spring.impl.PanelActionServiceImpl}。</p>
  */
@@ -62,4 +63,19 @@ public interface IPanelActionService {
      * @return 该页面下全部动作的展示对象列表
      */
     List<ActionDefVO> listByPageId(Long pageId);
+
+    /**
+     * 执行动作（按 {@code actionType} 分派：COMMAND 主线程命令 / HTTP 出站请求 / INTERNAL 本地分发）。
+     *
+     * <p>COMMAND 经 Bukkit 调度到主线程派发（可能操作世界数据）；HTTP 与 INTERNAL 经
+     * SOYS {@code HttpClientApi} 在异步线程执行，避免阻塞网关线程。
+     * 动作目标支持 {@code {fieldKey}} 占位符，由记录上下文（recordId 对应 dataJson）与
+     * 请求参数（params，同名优先）插值。</p>
+     *
+     * @param actionId   动作 ID
+     * @param request    执行上下文（可空；recordId + params）
+     * @param credential 调用方凭证
+     * @return AjaxResult（派发成功 / 参数或安全校验失败）
+     */
+    AjaxResult execute(Long actionId, ActionExecuteRequest request, CredentialPresentation credential);
 }

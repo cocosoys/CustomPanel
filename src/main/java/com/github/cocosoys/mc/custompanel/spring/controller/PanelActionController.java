@@ -1,6 +1,7 @@
 package com.github.cocosoys.mc.custompanel.spring.controller;
 
 import com.github.cocosoys.mc.custompanel.spring.entity.PanelAction;
+import com.github.cocosoys.mc.custompanel.spring.entity.vo.ActionExecuteRequest;
 import com.github.cocosoys.mc.custompanel.spring.service.IPanelActionService;
 import com.github.cocosoys.mc.soyshttpovermc.annotations.ApiName;
 import com.github.cocosoys.mc.soyshttpovermc.annotations.ApiPermission;
@@ -70,5 +71,14 @@ public class PanelActionController {
     public AjaxResult remove(@PathVariable(name = "actionIds") String actionIds,
                              CredentialPresentation credential) {
         return actionService.remove(actionIds, credential);
+    }
+
+    @ApiName("执行动作")
+    @ApiPermission("custompanel:action:execute")
+    @PostMapping("/execute/{actionId}")
+    public AjaxResult execute(@PathVariable(name = "actionId") Long actionId,
+                              @RequestBody ActionExecuteRequest request,
+                              CredentialPresentation credential) {
+        return actionService.execute(actionId, request, credential);
     }
 }

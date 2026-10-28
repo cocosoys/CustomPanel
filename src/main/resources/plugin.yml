@@ -38,3 +38,36 @@ permissions:
   custompanel.record.remove:
     description: 删除记录
     default: op
+  custompanel.field.list:
+    description: 字段列表
+    default: op
+  custompanel.field.query:
+    description: 字段查询
+    default: op
+  custompanel.field.add:
+    description: 新增字段
+    default: op
+  custompanel.field.edit:
+    description: 编辑字段
+    default: op
+  custompanel.field.remove:
+    description: 删除字段
+    default: op
+  custompanel.action.list:
+    description: 动作列表
+    default: op
+  custompanel.action.query:
+    description: 动作查询
+    default: op
+  custompanel.action.add:
+    description: 新增动作
+    default: op
+  custompanel.action.edit:
+    description: 编辑动作
+    default: op
+  custompanel.action.remove:
+    description: 删除动作
+    default: op
+  custompanel.action.execute:
+    description: 执行动作
+    default: op
