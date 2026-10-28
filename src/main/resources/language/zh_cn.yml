@@ -44,6 +44,11 @@ custompanel.action.internal-path-invalid: INTERNAL 动作目标必须是 / 开�
 # ---------- Schema 聚合 ----------
 custompanel.schema.not-found: 页面定义不存在
 
+# ---------- 托管实体（MANAGED） ----------
+custompanel.page.managed-entity-unregistered: 托管实体未注册：{0}
+custompanel.managed.entity-not-found: 托管实体未注册：{0}
+custompanel.managed.page-not-managed: 目标页面不存在或非托管模式/实体不匹配（pageId={0}, entity={1}）
+
 # ---------- 记录管理（自由模式） ----------
 custompanel.record.not-found: 记录不存在
 custompanel.record.data-empty: 数据内容不能为空
@@ -62,3 +67,4 @@ custompanel.log.page-removed: 页面已删除 -> 字段 {0} 条，动作 {1} 条
 custompanel.log.record-added: 记录已新增 -> pageId {0}
 custompanel.log.action-executed: 动作已执行 -> {0}（{1}），目标：{2}，结果：{3}
 custompanel.log.action-execute-failed: 动作执行异常 -> {0}，原因：{1}
+custompanel.log.managed-added: 托管数据已新增 -> entity {0}, pageId {1}, recordId {2}

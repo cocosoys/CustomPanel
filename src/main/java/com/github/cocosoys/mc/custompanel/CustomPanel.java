@@ -1,6 +1,8 @@
 package com.github.cocosoys.mc.custompanel;
 
 import com.github.cocosoys.mc.custompanel.i18n.PanelI18n;
+import com.github.cocosoys.mc.custompanel.managed.ManagedEntityHandler;
+import com.github.cocosoys.mc.custompanel.managed.ManagedEntityRegistry;
 import com.github.cocosoys.mc.soyshttpovermc.HttpOverMcPlugin;
 import com.github.cocosoys.mc.soyshttpovermc.api.event.SoysReadyEvent;
 import lombok.CustomLog;
@@ -53,6 +55,22 @@ public final class CustomPanel extends JavaPlugin implements Listener {
             expansion.unregister();
         }
         log.infoT("custompanel.log.plugin-disabled", "已禁用");
+    }
+
+    /**
+     * 注册 MANAGED 托管实体处理器（供业务插件绑定编译期实体到自定义面板页面）。
+     * 幂等：同名 entityName 覆盖。面板扩展未登记（SOYS 未就绪）时返回 false。
+     *
+     * @param handler 处理器实现（见 {@link ManagedEntityHandler}）
+     * @return 是否生效
+     */
+    public boolean registerManagedEntity(ManagedEntityHandler handler) {
+        return expansion != null && expansion.registerManagedEntity(handler);
+    }
+
+    /** 托管实体注册表（读取已注册实体名）。 */
+    public ManagedEntityRegistry getManagedEntityRegistry() {
+        return expansion == null ? null : expansion.getManagedEntityRegistry();
     }
 
     /** SOYS 就绪事件兜底：主插件 reload 重建门面后重新登记。 */

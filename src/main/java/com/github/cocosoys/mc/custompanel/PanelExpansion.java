@@ -1,13 +1,19 @@
 package com.github.cocosoys.mc.custompanel;
 
+import com.github.cocosoys.mc.custompanel.managed.ManagedEntityHandler;
+import com.github.cocosoys.mc.custompanel.managed.ManagedEntityRegistry;
+import com.github.cocosoys.mc.custompanel.managed.impl.DemoItemHandler;
 import com.github.cocosoys.mc.custompanel.spring.controller.PanelActionController;
 import com.github.cocosoys.mc.custompanel.spring.controller.PanelFieldController;
+import com.github.cocosoys.mc.custompanel.spring.controller.PanelManagedController;
 import com.github.cocosoys.mc.custompanel.spring.controller.PanelPageController;
 import com.github.cocosoys.mc.custompanel.spring.controller.PanelRecordController;
+import com.github.cocosoys.mc.custompanel.spring.impl.ManagedEntityServiceImpl;
 import com.github.cocosoys.mc.custompanel.spring.impl.PanelActionServiceImpl;
 import com.github.cocosoys.mc.custompanel.spring.impl.PanelFieldServiceImpl;
 import com.github.cocosoys.mc.custompanel.spring.impl.PanelPageServiceImpl;
 import com.github.cocosoys.mc.custompanel.spring.impl.PanelRecordServiceImpl;
+import com.github.cocosoys.mc.custompanel.spring.service.IManagedEntityService;
 import com.github.cocosoys.mc.custompanel.spring.service.IPanelActionService;
 import com.github.cocosoys.mc.custompanel.spring.service.IPanelFieldService;
 import com.github.cocosoys.mc.custompanel.spring.service.IPanelPageService;
@@ -46,14 +52,35 @@ public class PanelExpansion extends McerpExpansion {
     private final IPanelFieldService fieldService;
     private final IPanelActionService actionService;
     private final IPanelRecordService recordService;
+    private final ManagedEntityRegistry managedRegistry;
+    private final IManagedEntityService managedService;
 
     public PanelExpansion(CustomPanel plugin) {
         this.plugin = plugin;
         this.fieldService = new PanelFieldServiceImpl();
         this.actionService = new PanelActionServiceImpl(plugin);
         this.recordService = new PanelRecordServiceImpl();
+        // 托管实体注册表：内置演示实体（demo-item，复用 PanelRecord 存储验证链路）；
+        // 业务插件经 CustomPanel.getInstance().registerManagedEntity(handler) 注册
+        this.managedRegistry = new ManagedEntityRegistry();
+        this.managedRegistry.register(new DemoItemHandler());
+        this.managedService = new ManagedEntityServiceImpl(managedRegistry);
         // 删除页面需级联清理其字段、动作与记录 → 页面服务反向依赖另三个服务
-        this.pageService = new PanelPageServiceImpl(fieldService, actionService, recordService);
+        this.pageService = new PanelPageServiceImpl(fieldService, actionService, recordService, managedRegistry);
+    }
+
+    /** 业务插件注册托管实体（幂等，同名覆盖）；返回是否生效。 */
+    public boolean registerManagedEntity(ManagedEntityHandler handler) {
+        if (handler == null) {
+            return false;
+        }
+        managedRegistry.register(handler);
+        return true;
+    }
+
+    /** 托管实体注册表（供读取已注册实体）。 */
+    public ManagedEntityRegistry getManagedEntityRegistry() {
+        return managedRegistry;
     }
 
     @Override
@@ -144,6 +171,7 @@ public class PanelExpansion extends McerpExpansion {
                 new PanelPageController(pageService),
                 new PanelFieldController(fieldService),
                 new PanelActionController(actionService),
-                new PanelRecordController(recordService));
+                new PanelRecordController(recordService),
+                new PanelManagedController(managedService));
     }
 }

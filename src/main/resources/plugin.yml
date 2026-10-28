@@ -71,3 +71,18 @@ permissions:
   custompanel.action.execute:
     description: 执行动作
     default: op
+  custompanel.managed.list:
+    description: 托管实体列表
+    default: op
+  custompanel.managed.query:
+    description: 托管数据查询
+    default: op
+  custompanel.managed.add:
+    description: 新增托管数据
+    default: op
+  custompanel.managed.edit:
+    description: 修改托管数据
+    default: op
+  custompanel.managed.remove:
+    description: 删除托管数据
+    default: op

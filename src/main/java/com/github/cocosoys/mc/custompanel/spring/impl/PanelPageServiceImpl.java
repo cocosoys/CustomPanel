@@ -2,6 +2,7 @@ package com.github.cocosoys.mc.custompanel.spring.impl;
 
 import static com.github.cocosoys.mc.custompanel.i18n.PanelI18n.t;
 
+import com.github.cocosoys.mc.custompanel.managed.ManagedEntityRegistry;
 import com.github.cocosoys.mc.custompanel.spring.entity.PanelPage;
 import com.github.cocosoys.mc.custompanel.spring.entity.vo.PageDefVO;
 import com.github.cocosoys.mc.custompanel.spring.entity.vo.PageSchemaVO;
@@ -23,7 +24,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * 页面定义管理实现：CRUD、唯一性校验、审计字段填充。
+ * 页面定义管理实现：CRUD、唯一性校验、审计字段填充、托管实体绑定校验。
  *
  * <p>全部业务逻辑集中在本层——Controller 只做参数绑定与权限声明。
  * 持久化经 SOYS {@link DATA} 门面（SQL / YAML 自动路由），本插件不实现存储层。</p>
@@ -34,18 +35,22 @@ public class PanelPageServiceImpl implements IPanelPageService {
     private final IPanelFieldService fieldService;
     private final IPanelActionService actionService;
     private final IPanelRecordService recordService;
+    private final ManagedEntityRegistry managedRegistry;
 
     /**
-     * @param fieldService  字段服务（删除页面时级联清理字段）
-     * @param actionService 动作服务（删除页面时级联清理动作）
-     * @param recordService 记录服务（删除页面时级联清理自由模式记录）
+     * @param fieldService   字段服务（删除页面时级联清理字段）
+     * @param actionService  动作服务（删除页面时级联清理动作）
+     * @param recordService  记录服务（删除页面时级联清理自由模式记录）
+     * @param managedRegistry 托管实体注册表（MANAGED 页面 entityName 必须已注册才放行）
      */
     public PanelPageServiceImpl(IPanelFieldService fieldService,
                                 IPanelActionService actionService,
-                                IPanelRecordService recordService) {
+                                IPanelRecordService recordService,
+                                ManagedEntityRegistry managedRegistry) {
         this.fieldService = fieldService;
         this.actionService = actionService;
         this.recordService = recordService;
+        this.managedRegistry = managedRegistry;
     }
 
     @Override
@@ -104,6 +109,11 @@ public class PanelPageServiceImpl implements IPanelPageService {
                 && (page.getEntityName() == null || page.getEntityName().trim().isEmpty())) {
             return AjaxResult.error(t("custompanel.page.managed-need-entity", "托管模式必须指定绑定实体"));
         }
+        if (PanelPage.StoreMode.MANAGED.equals(mode)
+                && !isManagedEntityRegistered(page.getEntityName().trim())) {
+            return AjaxResult.error(t("custompanel.page.managed-entity-unregistered",
+                    "托管实体未注册：{0}", page.getEntityName().trim()));
+        }
         if (findByKey(key) != null) {
             return AjaxResult.error(t("custompanel.page.key-exists", "页面标识已存在"));
         }
@@ -156,9 +166,19 @@ public class PanelPageServiceImpl implements IPanelPageService {
         if (page.getEntityName() != null) {
             p.setEntityName(page.getEntityName());
         }
-        if (PanelPage.StoreMode.MANAGED.equals(p.getStoreMode())
-                && (p.getEntityName() == null || p.getEntityName().trim().isEmpty())) {
-            return AjaxResult.error(t("custompanel.page.managed-need-entity", "托管模式必须指定绑定实体"));
+        String finalMode = p.getStoreMode();
+        String finalEntity = p.getEntityName() == null ? "" : p.getEntityName().trim();
+        if (PanelPage.StoreMode.MANAGED.equals(finalMode)) {
+            if (finalEntity.isEmpty()) {
+                return AjaxResult.error(t("custompanel.page.managed-need-entity", "托管模式必须指定绑定实体"));
+            }
+            if (!isManagedEntityRegistered(finalEntity)) {
+                return AjaxResult.error(t("custompanel.page.managed-entity-unregistered",
+                        "托管实体未注册：{0}", finalEntity));
+            }
+        } else {
+            // FREE 模式：托管实体名无意义，一律清空（防止残留脏绑定）
+            p.setEntityName("");
         }
         if (page.getOrderNum() != null) {
             p.setOrderNum(page.getOrderNum());
@@ -215,6 +235,11 @@ public class PanelPageServiceImpl implements IPanelPageService {
     }
 
     // ===== 内部 =====
+
+    /** 托管实体是否已注册（注册表查重，封堵 MANAGED 任意字符串缺口）。 */
+    private boolean isManagedEntityRegistered(String entityName) {
+        return managedRegistry != null && managedRegistry.contains(entityName);
+    }
 
     /** 按页面标识精确查找（忽略大小写）；不存在返回 null。 */
     private PanelPage findByKey(String key) {
