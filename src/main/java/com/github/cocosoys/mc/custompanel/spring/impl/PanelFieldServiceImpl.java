@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * 字段定义管理实现：CRUD、所属页面校验、类型合法性校验、按页面级联清理。
@@ -112,21 +113,27 @@ public class PanelFieldServiceImpl implements IPanelFieldService {
         if (f == null) {
             return AjaxResult.error(t("custompanel.field.not-found", "字段不存在"));
         }
-        if (field.getFieldKey() != null && !field.getFieldKey().trim().isEmpty()) {
-            String newKey = field.getFieldKey().trim();
-            // 目标页面：更新请求携带新 pageId 则以其为准，否则沿用当前记录所属页
-            Long targetPageId = f.getPageId();
-            if (field.getPageId() != null && !field.getPageId().equals(f.getPageId())) {
-                if (DATA.get(PanelPage.class, field.getPageId()) == null) {
-                    return AjaxResult.error(t("custompanel.common.page-not-found", "所属页面不存在"));
-                }
-                targetPageId = field.getPageId();
+        // 目标页面：更新请求携带新 pageId 则以其为准（须存在），否则沿用当前记录所属页
+        Long targetPageId = f.getPageId();
+        if (field.getPageId() != null && !field.getPageId().equals(f.getPageId())) {
+            if (DATA.get(PanelPage.class, field.getPageId()) == null) {
+                return AjaxResult.error(t("custompanel.common.page-not-found", "所属页面不存在"));
             }
-            // 同页字段键唯一（忽略大小写，排除自身）
-            if (findByKey(targetPageId, newKey, fieldId) != null) {
+            targetPageId = field.getPageId();
+        }
+        // 目标字段键：请求携带非空 fieldKey 则以其为准，否则沿用原键
+        boolean keyChanged = field.getFieldKey() != null && !field.getFieldKey().trim().isEmpty()
+                && !field.getFieldKey().trim().equals(f.getFieldKey());
+        String targetKey = keyChanged ? field.getFieldKey().trim() : f.getFieldKey();
+        // 同页字段键唯一（忽略大小写，排除自身）：键或所属页变化都要重新校验，
+        // 否则“只换页不改键”可把重复键搬进目标页
+        if (keyChanged || !Objects.equals(targetPageId, f.getPageId())) {
+            if (findByKey(targetPageId, targetKey, fieldId) != null) {
                 return AjaxResult.error(t("custompanel.field.key-exists", "字段键已存在"));
             }
-            f.setFieldKey(newKey);
+        }
+        if (keyChanged) {
+            f.setFieldKey(targetKey);
         }
         if (field.getFieldName() != null && !field.getFieldName().trim().isEmpty()) {
             f.setFieldName(field.getFieldName().trim());
@@ -137,12 +144,6 @@ public class PanelFieldServiceImpl implements IPanelFieldService {
                 return AjaxResult.error(t("custompanel.field.type-invalid", "字段类型非法（STRING/NUMBER/BOOLEAN/DATE/TEXT/SELECT）"));
             }
             f.setFieldType(type);
-        }
-        if (field.getPageId() != null) {
-            if (DATA.get(PanelPage.class, field.getPageId()) == null) {
-                return AjaxResult.error(t("custompanel.common.page-not-found", "所属页面不存在"));
-            }
-            f.setPageId(field.getPageId());
         }
         if (field.getRequired() != null && !field.getRequired().isEmpty()) {
             f.setRequired(field.getRequired());
@@ -162,6 +163,7 @@ public class PanelFieldServiceImpl implements IPanelFieldService {
         if (field.getRemark() != null) {
             f.setRemark(field.getRemark());
         }
+        f.setPageId(targetPageId);
         f.setUpdateTime(new Date());
         f.setUpdateBy(PanelAuth.currentPlayer(credential));
         DATA.updateById(f);

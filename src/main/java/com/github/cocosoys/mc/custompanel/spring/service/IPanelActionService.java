@@ -72,6 +72,9 @@ public interface IPanelActionService {
      * 动作目标支持 {@code {fieldKey}} 占位符，由记录上下文（recordId 对应 dataJson）与
      * 请求参数（params，同名优先）插值。</p>
      *
+     * <p>动作级权限：{@code panel_action.permission} 非空时，执行前先校验调用方凭证是否持有该节点
+     * （{@code ':' ≡ '.'} 归一），无权限返回 403；为空则沿用页面权限。</p>
+     *
      * @param actionId   动作 ID
      * @param request    执行上下文（可空；recordId + params）
      * @param credential 调用方凭证

@@ -42,7 +42,7 @@ public class PanelAction extends BaseEntity {
     /** 是否需要二次确认（0 否 / 1 是） */
     private String confirm;
 
-    /** 触发所需权限标识（可空 = 沿用页面权限） */
+    /** 触发所需权限节点（可空 = 沿用页面权限）；配置后由执行引擎在动作执行前校验（{@code ':' ≡ '.'}） */
     private String permission;
 
     /** 排序号（升序） */

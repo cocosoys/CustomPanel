@@ -40,6 +40,8 @@ custompanel.action.execute-queued: 动作已派发执行
 custompanel.action.http-url-invalid: HTTP 动作目标必须是 http/https URL
 custompanel.action.http-url-blocked: HTTP 动作目标被安全策略拒绝（内网/环回地址）
 custompanel.action.internal-path-invalid: INTERNAL 动作目标必须是 / 开头的逻辑路径
+custompanel.action.permission-denied: 无执行该动作的权限
+custompanel.action.permission-service-unavailable: 权限服务不可用，无法校验动作权限
 
 # ---------- Schema 聚合 ----------
 custompanel.schema.not-found: 页面定义不存在

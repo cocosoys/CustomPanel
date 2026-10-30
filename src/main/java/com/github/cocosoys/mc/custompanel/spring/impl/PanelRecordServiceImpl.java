@@ -91,12 +91,20 @@ public class PanelRecordServiceImpl implements IPanelRecordService {
         if (r == null) {
             return AjaxResult.error(t("custompanel.record.not-found", "记录不存在"));
         }
-        if (record.getPageId() != null) {
-            if (DATA.get(PanelPage.class, record.getPageId()) == null) {
-                return AjaxResult.error(t("custompanel.common.page-not-found", "所属页面不存在"));
-            }
-            r.setPageId(record.getPageId());
+        // 目标页面：请求携带新 pageId 则以其为准，否则沿用记录所属页；
+        // 无论新增还是迁移，落点必须是 FREE 自由模式页（MANAGED 数据走绑定实体真实列，两种模式不允许混存）
+        Long targetPageId = record.getPageId() != null ? record.getPageId() : r.getPageId();
+        if (targetPageId == null) {
+            return AjaxResult.error(t("custompanel.common.page-not-found", "所属页面不存在"));
         }
+        PanelPage page = DATA.get(PanelPage.class, targetPageId);
+        if (page == null) {
+            return AjaxResult.error(t("custompanel.common.page-not-found", "所属页面不存在"));
+        }
+        if (!PanelPage.StoreMode.FREE.equals(page.getStoreMode())) {
+            return AjaxResult.error(t("custompanel.record.page-not-free", "仅自由模式页面可写入记录"));
+        }
+        r.setPageId(targetPageId);
         if (record.getDataJson() != null) {
             r.setDataJson(record.getDataJson());
         }

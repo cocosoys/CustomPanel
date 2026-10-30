@@ -30,6 +30,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -39,6 +40,10 @@ import java.util.concurrent.CompletableFuture;
  * （可能操作世界数据）；HTTP 与 INTERNAL 经 SOYS {@link HttpClientApi} 在异步线程执行
  * （复用主插件出站 HTTP 客户端，不自行实现网络栈），避免阻塞网关线程。
  * 动作目标支持 {@code {fieldKey}} 占位符插值，来源为记录 dataJson 与请求参数。</p>
+ *
+ * <p>动作级权限：{@code panel_action.permission} 非空时，执行前经主插件组合权限服务校验当前凭证
+ * 是否持有该节点（端点权限 {@code custompanel:action:execute} 只决定能否调用执行接口，不放宽动作自身约束）；
+ * 为空则沿用页面权限。</p>
  *
  * <p>持久化经 SOYS {@link DATA} 门面，本插件不实现存储层。</p>
  */
@@ -135,21 +140,27 @@ public class PanelActionServiceImpl implements IPanelActionService {
         if (a == null) {
             return AjaxResult.error(t("custompanel.action.not-found", "动作不存在"));
         }
-        if (action.getActionKey() != null && !action.getActionKey().trim().isEmpty()) {
-            String newKey = action.getActionKey().trim();
-            // 目标页面：更新请求携带新 pageId 则以其为准，否则沿用当前记录所属页
-            Long targetPageId = a.getPageId();
-            if (action.getPageId() != null && !action.getPageId().equals(a.getPageId())) {
-                if (DATA.get(PanelPage.class, action.getPageId()) == null) {
-                    return AjaxResult.error(t("custompanel.common.page-not-found", "所属页面不存在"));
-                }
-                targetPageId = action.getPageId();
+        // 目标页面：更新请求携带新 pageId 则以其为准（须存在），否则沿用当前记录所属页
+        Long targetPageId = a.getPageId();
+        if (action.getPageId() != null && !action.getPageId().equals(a.getPageId())) {
+            if (DATA.get(PanelPage.class, action.getPageId()) == null) {
+                return AjaxResult.error(t("custompanel.common.page-not-found", "所属页面不存在"));
             }
-            // 同页动作键唯一（忽略大小写，排除自身）
-            if (findByKey(targetPageId, newKey, actionId) != null) {
+            targetPageId = action.getPageId();
+        }
+        // 目标动作键：请求携带非空 actionKey 则以其为准，否则沿用原键
+        boolean keyChanged = action.getActionKey() != null && !action.getActionKey().trim().isEmpty()
+                && !action.getActionKey().trim().equals(a.getActionKey());
+        String targetKey = keyChanged ? action.getActionKey().trim() : a.getActionKey();
+        // 同页动作键唯一（忽略大小写，排除自身）：键或所属页变化都要重新校验，
+        // 否则“只换页不改键”可把重复键搬进目标页
+        if (keyChanged || !Objects.equals(targetPageId, a.getPageId())) {
+            if (findByKey(targetPageId, targetKey, actionId) != null) {
                 return AjaxResult.error(t("custompanel.action.key-exists", "动作键已存在"));
             }
-            a.setActionKey(newKey);
+        }
+        if (keyChanged) {
+            a.setActionKey(targetKey);
         }
         if (action.getActionName() != null && !action.getActionName().trim().isEmpty()) {
             a.setActionName(action.getActionName().trim());
@@ -160,12 +171,6 @@ public class PanelActionServiceImpl implements IPanelActionService {
                 return AjaxResult.error(t("custompanel.action.type-invalid", "动作类型非法（COMMAND/HTTP/INTERNAL）"));
             }
             a.setActionType(type);
-        }
-        if (action.getPageId() != null) {
-            if (DATA.get(PanelPage.class, action.getPageId()) == null) {
-                return AjaxResult.error(t("custompanel.common.page-not-found", "所属页面不存在"));
-            }
-            a.setPageId(action.getPageId());
         }
         if (action.getActionTarget() != null) {
             a.setActionTarget(action.getActionTarget());
@@ -182,6 +187,7 @@ public class PanelActionServiceImpl implements IPanelActionService {
         if (action.getRemark() != null) {
             a.setRemark(action.getRemark());
         }
+        a.setPageId(targetPageId);
         a.setUpdateTime(new Date());
         a.setUpdateBy(PanelAuth.currentPlayer(credential));
         DATA.updateById(a);
@@ -241,6 +247,16 @@ public class PanelActionServiceImpl implements IPanelActionService {
         PanelAction a = actionId == null ? null : DATA.get(PanelAction.class, actionId);
         if (a == null) {
             return AjaxResult.error(t("custompanel.action.not-found", "动作不存在"));
+        }
+        // 动作级权限：配置了 permission 时必须由当前凭证持有（端点权限只决定能否调用执行接口，
+        // 不能覆盖动作自身约束）；未配置则沿用页面权限（放行）
+        Boolean granted = actionPermissionGranted(a, credential);
+        if (granted == null) {
+            return AjaxResult.errorT(503, "custompanel.action.permission-service-unavailable",
+                    "权限服务不可用，无法校验动作权限");
+        }
+        if (!granted) {
+            return AjaxResult.forbiddenT("custompanel.action.permission-denied", "无执行该动作的权限");
         }
         Map<String, String> context = buildContext(request);
         String type = a.getActionType() == null ? PanelAction.ActionType.COMMAND : a.getActionType();
@@ -456,6 +472,27 @@ public class PanelActionServiceImpl implements IPanelActionService {
     }
 
     // ===== 内部 =====
+
+    /**
+     * 动作级权限判定：{@code permission} 为空视为沿用页面权限（直接放行）；非空则经主插件组合权限服务
+     * 判定当前凭证（会话令牌 / X-API-Key）是否持有该节点。节点按 SOYS 约定归一（{@code ':' ≡ '.'}），
+     * 支持全量 {@code *} 与段级尾通配。
+     *
+     * @param a          动作定义
+     * @param credential 请求凭证
+     * @return true=有权限；false=无权限；null=主插件权限服务不可用（调用方按失败关闭处理）
+     */
+    private static Boolean actionPermissionGranted(PanelAction a, CredentialPresentation credential) {
+        String node = a.getPermission() == null ? "" : a.getPermission().trim();
+        if (node.isEmpty()) {
+            return Boolean.TRUE;
+        }
+        HttpOverMcPlugin soys = HttpOverMcPlugin.getInstance();
+        if (soys == null || soys.getCombinedPermissionService() == null) {
+            return null;
+        }
+        return soys.getCombinedPermissionService().hasPermission(credential, node.replace(':', '.'));
+    }
 
     /** 同页动作键查重（忽略大小写）；excludeActionId 非空时排除该动作（修改场景排除自身），命中返回记录。 */
     private PanelAction findByKey(Long pageId, String key, Long excludeActionId) {
