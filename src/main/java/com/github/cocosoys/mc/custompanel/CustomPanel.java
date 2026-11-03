@@ -38,6 +38,7 @@ public final class CustomPanel extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         instance = this;
+        saveDefaultConfig();
         PanelI18n.register(this);
         getServer().getPluginManager().registerEvents(this, this);
         // SOYS 可能已先启用（SoysReadyEvent 在本监听器注册前已广播）→ 就绪则直接登记

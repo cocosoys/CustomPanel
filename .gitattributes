@@ -1,0 +1,6 @@
+# Git hooks 与 shell 脚本强制 LF：CRLF 会让 sh 报 "bad interpreter: /bin/sh^M"
+scripts/hooks/* text eol=lf
+*.sh text eol=lf
+
+# PowerShell 脚本由 Windows 执行，允许随 core.autocrlf 转换
+*.ps1 text eol=crlf

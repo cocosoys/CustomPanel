@@ -60,10 +60,12 @@ public class PanelExpansion extends McerpExpansion {
         this.fieldService = new PanelFieldServiceImpl();
         this.actionService = new PanelActionServiceImpl(plugin);
         this.recordService = new PanelRecordServiceImpl();
-        // 托管实体注册表：内置演示实体（demo-item，复用 PanelRecord 存储验证链路）；
+        // 托管实体注册表：演示实体（demo-item）由 config.yml 控制开关，默认开启；
         // 业务插件经 CustomPanel.getInstance().registerManagedEntity(handler) 注册
         this.managedRegistry = new ManagedEntityRegistry();
-        this.managedRegistry.register(new DemoItemHandler());
+        if (plugin.getConfig().getBoolean("demo-entity.enabled", true)) {
+            this.managedRegistry.register(new DemoItemHandler());
+        }
         this.managedService = new ManagedEntityServiceImpl(managedRegistry);
         // 删除页面需级联清理其字段、动作与记录 → 页面服务反向依赖另三个服务
         this.pageService = new PanelPageServiceImpl(fieldService, actionService, recordService, managedRegistry);

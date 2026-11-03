@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
 /**
  * 动作定义管理实现：CRUD、所属页面校验、类型合法性校验、按页面级联清理与执行分派。
@@ -483,15 +484,35 @@ public class PanelActionServiceImpl implements IPanelActionService {
      * @return true=有权限；false=无权限；null=主插件权限服务不可用（调用方按失败关闭处理）
      */
     private static Boolean actionPermissionGranted(PanelAction a, CredentialPresentation credential) {
-        String node = a.getPermission() == null ? "" : a.getPermission().trim();
+        HttpOverMcPlugin soys = HttpOverMcPlugin.getInstance();
+        Function<String, Boolean> checker = null;
+        if (soys != null && soys.getCombinedPermissionService() != null) {
+            checker = node -> soys.getCombinedPermissionService().hasPermission(credential, node);
+        }
+        return actionPermissionGranted(a.getPermission(), checker);
+    }
+
+    /**
+     * 纯判定入口（便于无 Spigot 运行时的单元测试）：权限为空沿用页面权限（放行）；
+     * checker 为空表示权限服务不可用；checker 抛异常同样按不可用处理（调用方失败关闭）。
+     *
+     * @param permission 动作级权限节点，可空
+     * @param checker    节点 → 是否持有的判定函数，可空
+     * @return true=放行；false=拒绝；null=权限服务不可用
+     */
+    static Boolean actionPermissionGranted(String permission, Function<String, Boolean> checker) {
+        String node = permission == null ? "" : permission.trim();
         if (node.isEmpty()) {
             return Boolean.TRUE;
         }
-        HttpOverMcPlugin soys = HttpOverMcPlugin.getInstance();
-        if (soys == null || soys.getCombinedPermissionService() == null) {
+        if (checker == null) {
             return null;
         }
-        return soys.getCombinedPermissionService().hasPermission(credential, node.replace(':', '.'));
+        try {
+            return checker.apply(node.replace(':', '.'));
+        } catch (RuntimeException e) {
+            return null;
+        }
     }
 
     /** 同页动作键查重（忽略大小写）；excludeActionId 非空时排除该动作（修改场景排除自身），命中返回记录。 */

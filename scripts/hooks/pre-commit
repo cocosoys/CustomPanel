@@ -1,0 +1,27 @@
+#!/bin/sh
+# CustomPanel pre-commit：校验前端构建产物 web/dist 与 src/main/resources/dist 一致。
+# 安装：在仓库根执行 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/install-git-hooks.ps1
+
+root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+
+if [ ! -d "$root/web/dist" ]; then
+    echo "[pre-commit] 跳过产物校验：web/dist 不存在（前端尚未构建）"
+    exit 0
+fi
+
+if ! command -v powershell.exe >/dev/null 2>&1; then
+    echo "[pre-commit] 跳过产物校验：未找到 powershell.exe"
+    exit 0
+fi
+
+root_win=$(cd "$root" && pwd -W 2>/dev/null || echo "$root")
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$root_win/scripts/verify-web-dist.ps1"
+status=$?
+
+if [ $status -ne 0 ]; then
+    echo "[pre-commit] 前后端产物不一致，提交已被阻止。请先同步："
+    echo "             robocopy web\\dist src\\main\\resources\\dist /MIR /NJH /NJS /NDL /NC /NS"
+    exit 1
+fi
+
+exit 0

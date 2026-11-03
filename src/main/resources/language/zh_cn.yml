@@ -51,12 +51,6 @@ custompanel.page.managed-entity-unregistered: 托管实体未注册：{0}
 custompanel.managed.entity-not-found: 托管实体未注册：{0}
 custompanel.managed.page-not-managed: 目标页面不存在或非托管模式/实体不匹配（pageId={0}, entity={1}）
 
-# ---------- 记录管理（自由模式） ----------
-custompanel.record.not-found: 记录不存在
-custompanel.record.data-empty: 数据内容不能为空
-custompanel.record.page-not-free: 仅自由模式页面可写入记录
-custompanel.record.missing-recordId: 缺少 recordId
-
 # ---------- 日志 ----------
 custompanel.log.plugin-enabled: 已启用（自定义控制面板）
 custompanel.log.plugin-disabled: 已禁用
@@ -67,6 +61,6 @@ custompanel.log.mcerp-not-ready: MCERP 未就绪，跳过 ERP 登记（reload �
 custompanel.log.page-added: 页面已新增 -> {0}
 custompanel.log.page-removed: 页面已删除 -> 字段 {0} 条，动作 {1} 条，记录 {2} 条
 custompanel.log.record-added: 记录已新增 -> pageId {0}
-custompanel.log.action-executed: 动作已执行 -> {0}（{1}），目标：{2}，结果：{3}
+custompanel.log.action-executed: 动作已执行 -> {0}，目标：{1}，结果：{2}
 custompanel.log.action-execute-failed: 动作执行异常 -> {0}，原因：{1}
 custompanel.log.managed-added: 托管数据已新增 -> entity {0}, pageId {1}, recordId {2}
