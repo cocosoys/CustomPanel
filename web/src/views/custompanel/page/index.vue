@@ -40,7 +40,10 @@
       <el-table-column label="页面名称" align="center" prop="pageName" width="150" />
       <el-table-column label="图标" align="center" prop="icon" width="90">
         <template slot-scope="scope">
-          <svg-icon v-if="scope.row.icon" :icon-class="scope.row.icon" />
+          <!-- 兼容两种命名空间：svg 集内走 svg-icon；老数据 el-icon-* 走 Element 字体图标；其余原样显示 -->
+          <svg-icon v-if="scope.row.icon && isSvgIcon(scope.row.icon)" :icon-class="scope.row.icon" />
+          <i v-else-if="scope.row.icon && scope.row.icon.indexOf('el-icon-') === 0" :class="scope.row.icon" />
+          <span v-else-if="scope.row.icon" style="color:#909399;font-size:12px">{{ scope.row.icon }}</span>
           <span v-else>-</span>
         </template>
       </el-table-column>
@@ -127,6 +130,7 @@
 <script>
 import { listPage, getPage, addPage, editPage, removePage, listManagedEntities } from '@/api/custompanel'
 import IconSelect from '@/components/IconSelect'
+import iconList from '@/components/IconSelect/requireIcons'
 
 export default {
   name: 'CustomPanelPage',
@@ -265,6 +269,10 @@ export default {
     /** 图标选择回调 */
     onIconSelected(name) {
       this.form.icon = name
+    },
+    /** 判断图标是否属于工程 svg 图标集（渲染命名空间校验） */
+    isSvgIcon(name) {
+      return iconList.indexOf(name) !== -1
     },
     /** 新增按钮操作 */
     handleAdd() {
