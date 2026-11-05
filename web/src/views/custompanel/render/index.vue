@@ -14,9 +14,10 @@
           <span v-if="schema.page.storeMode === 'MANAGED' && schema.page.entityName">｜ 实体：{{ schema.page.entityName }}</span>
           <span v-if="schema.page.remark">｜ {{ schema.page.remark }}</span>
         </div>
-        <!-- 动作按钮区 -->
+        <!-- 动作按钮区：confirm=1 的动作用警示色，其余主色 -->
         <div v-if="schema.actions && schema.actions.length" class="render-actions">
-          <el-button v-for="a in schema.actions" :key="a.actionId" size="small" type="primary" plain
+          <el-button v-for="a in schema.actions" :key="a.actionId" size="small"
+                     :type="a.confirm === '1' ? 'danger' : 'primary'" plain
                      icon="el-icon-caret-right" :loading="actionLoading === a.actionId"
                      @click="handleAction(a)">{{ a.actionName }}</el-button>
         </div>

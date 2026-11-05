@@ -37,7 +37,11 @@
     <el-table v-loading="loading" :data="actionList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="动作ID" align="center" prop="actionId" width="80" />
-      <el-table-column label="所属页面" align="center" prop="pageId" width="80" />
+      <el-table-column label="所属页面" align="center" width="170" show-overflow-tooltip>
+        <template slot-scope="scope">
+          {{ pageNameMap[scope.row.pageId] || ('页面 #' + scope.row.pageId) }}
+        </template>
+      </el-table-column>
       <el-table-column label="动作键" align="center" prop="actionKey" width="120" />
       <el-table-column label="动作名称" align="center" prop="actionName" width="150" />
       <el-table-column label="类型" align="center" prop="actionType" width="100">
@@ -172,7 +176,22 @@ export default {
       }
     }
   },
+  computed: {
+    /** 页面ID → 页面名（key）映射，用于列表展示 */
+    pageNameMap() {
+      const m = {}
+      for (const p of this.pageOptions) {
+        m[p.pageId] = p.pageName + '（' + p.pageKey + '）'
+      }
+      return m
+    }
+  },
   created() {
+    // 支持 /action?pageId= 路由预选（页面管理"动作"入口跳转）
+    const pre = this.$route.query.pageId
+    if (pre) {
+      this.queryParams.pageId = Number(pre)
+    }
     this.loadPageOptions()
     this.getList()
   },

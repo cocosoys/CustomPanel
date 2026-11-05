@@ -37,12 +37,16 @@
     <el-table v-loading="loading" :data="fieldList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="字段ID" align="center" prop="fieldId" width="80" />
-      <el-table-column label="所属页面" align="center" prop="pageId" width="80" />
+      <el-table-column label="所属页面" align="center" width="170" show-overflow-tooltip>
+        <template slot-scope="scope">
+          {{ pageNameMap[scope.row.pageId] || ('页面 #' + scope.row.pageId) }}
+        </template>
+      </el-table-column>
       <el-table-column label="字段键" align="center" prop="fieldKey" width="120" />
       <el-table-column label="字段名称" align="center" prop="fieldName" width="150" />
-      <el-table-column label="类型" align="center" prop="fieldType" width="90">
+      <el-table-column label="类型" align="center" prop="fieldType" width="100">
         <template slot-scope="scope">
-          <el-tag>{{ scope.row.fieldType }}</el-tag>
+          <el-tag :type="fieldTypeTag(scope.row.fieldType)">{{ scope.row.fieldType }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="必填" align="center" prop="required" width="70">
@@ -185,11 +189,31 @@ export default {
       }
     }
   },
+  computed: {
+    /** 页面ID → 页面名（key）映射，用于列表展示 */
+    pageNameMap() {
+      const m = {}
+      for (const p of this.pageOptions) {
+        m[p.pageId] = p.pageName + '（' + p.pageKey + '）'
+      }
+      return m
+    }
+  },
   created() {
+    // 支持 /field?pageId= 路由预选（页面管理"字段"入口跳转）
+    const pre = this.$route.query.pageId
+    if (pre) {
+      this.queryParams.pageId = Number(pre)
+    }
     this.loadPageOptions()
     this.getList()
   },
   methods: {
+    /** 字段类型标签配色（与动作类型配色同一套语义） */
+    fieldTypeTag(type) {
+      const map = { STRING: 'primary', NUMBER: 'warning', BOOLEAN: 'danger', DATE: 'info', TEXT: 'success', SELECT: '' }
+      return map[type] || ''
+    },
     /** 加载页面下拉（全量） */
     loadPageOptions() {
       listPage({ pageNum: 1, pageSize: 1000 }).then(response => {

@@ -61,10 +61,12 @@
       </el-table-column>
       <el-table-column label="备注" align="center" prop="remark" show-overflow-tooltip />
       <el-table-column label="创建时间" align="center" prop="createTime" width="160" />
-      <el-table-column label="操作" align="center" width="230" class-name="small-padding fixed-width">
+      <el-table-column label="操作" align="center" width="310" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button size="mini" type="text" icon="el-icon-view" @click="handleOpen(scope.row)">打开</el-button>
           <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(scope.row)">修改</el-button>
+          <el-button size="mini" type="text" icon="el-icon-tickets" @click="handleField(scope.row)">字段</el-button>
+          <el-button size="mini" type="text" icon="el-icon-caret-right" @click="handleAction(scope.row)">动作</el-button>
           <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(scope.row)">删除</el-button>
         </template>
       </el-table-column>
@@ -74,7 +76,7 @@
                 :limit.sync="queryParams.pageSize" @pagination="getList" />
 
     <!-- 新增 / 修改对话框 -->
-    <el-dialog :title="title" :visible.sync="open" width="560px" append-to-body>
+    <el-dialog :title="title" :visible.sync="open" width="600px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="100px">
         <el-form-item label="页面标识" prop="pageKey">
           <el-input v-model="form.pageKey" placeholder="英文字母键，如 shop" />
@@ -83,7 +85,7 @@
           <el-input v-model="form.pageName" placeholder="侧边栏显示名，如 商店管理" />
         </el-form-item>
         <el-form-item label="图标" prop="icon">
-          <el-input v-model="form.icon" placeholder="Element 图标名，如 goods（可空）" />
+          <icon-select :active-icon="form.icon" @selected="onIconSelected" />
         </el-form-item>
         <el-form-item label="存储模式" prop="storeMode">
           <el-radio-group v-model="form.storeMode">
@@ -124,6 +126,7 @@
 
 <script>
 import { listPage, getPage, addPage, editPage, removePage, listManagedEntities } from '@/api/custompanel'
+import IconSelect from '@/components/IconSelect'
 
 export default {
   name: 'CustomPanelPage',
@@ -250,6 +253,18 @@ export default {
     /** 打开渲染器：跳转 /view/:pageId */
     handleOpen(row) {
       this.$router.push({ path: '/view/' + row.pageId })
+    },
+    /** 跳转字段管理（预选页面）：/field?pageId= */
+    handleField(row) {
+      this.$router.push({ path: '/field', query: { pageId: row.pageId } })
+    },
+    /** 跳转动作管理（预选页面）：/action?pageId= */
+    handleAction(row) {
+      this.$router.push({ path: '/action', query: { pageId: row.pageId } })
+    },
+    /** 图标选择回调 */
+    onIconSelected(name) {
+      this.form.icon = name
     },
     /** 新增按钮操作 */
     handleAdd() {
