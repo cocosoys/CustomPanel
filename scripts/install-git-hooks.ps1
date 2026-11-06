@@ -1,4 +1,4 @@
-﻿# 启用仓库级 Git hooks（pre-commit：前端产物一致性校验）。
+﻿﻿# 启用仓库级 Git hooks（pre-commit：前端产物一致性校验）。
 # 用法：在仓库根执行 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/install-git-hooks.ps1
 $ErrorActionPreference = 'Stop'
 

@@ -127,3 +127,5 @@ node_modules/
 
 # 旧前端子模块工作副本（内容已并入 web/，可安全删除）
 /MCERP-Vue2-example/
+ui-design-runs/*
+.w*/*
