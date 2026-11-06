@@ -162,6 +162,10 @@ public class PanelExpansion extends McerpExpansion {
     protected ErpMenus menus() {
         return ErpMenus.create()
                 .menu("page", "页面管理", "build", PanelPageController.class)
+                // 记录 CRUD 与托管实体数据都是「页面」这一层的业务能力：
+                // 记录按 pageId 归属页面、托管实体由页面渲染时读取，
+                // 故其按钮权限统一挂在「页面管理」菜单下（permsFrom 作用于最近一次 menu）。
+                .permsFrom(PanelRecordController.class, PanelManagedController.class)
                 .menu("field", "字段管理", "list", PanelFieldController.class)
                 .menu("action", "动作管理", "flash-on", PanelActionController.class);
     }
