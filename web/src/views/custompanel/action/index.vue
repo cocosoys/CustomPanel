@@ -187,7 +187,7 @@ export default {
     }
   },
   created() {
-    // 支持 /action?pageId= 路由预选（页面管理"动作"入口跳转）
+    // 支持 /custompanel/action?pageId= 路由预选（页面管理"动作"入口跳转）
     const pre = this.$route.query.pageId
     if (pre) {
       this.queryParams.pageId = Number(pre)

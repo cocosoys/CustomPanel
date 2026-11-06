@@ -106,7 +106,7 @@ if (isWujie) {
     mount()
     // wujie 模式下侧边栏直接用 wujieRoutes（不调 GenerateRoutes，避免与主应用菜单重复）
     store.commit('SET_SIDEBAR_ROUTERS', wujieRoutes)
-    // 初始路由：主应用传 path 则跳过去（如 /soyshttpovermcerp/group）
+    // 初始路由：主应用传 path 则跳过去（如 /custompanel/page）
     if (props && props.path && router.currentRoute.path !== props.path) {
       router.push(props.path)
     }

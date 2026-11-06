@@ -2,20 +2,19 @@
   <div class="app-container home">
     <el-row :gutter="20">
       <el-col :sm="24" :lg="16" style="padding-left: 20px">
-        <h2>SOYSHTTPOverMC ERP 管理台</h2>
+        <h2>自定义面板（CustomPanel）</h2>
         <p>
-          欢迎回来，<b>{{ nickName || name }}</b>。这里是 SOYSHTTPOverMC 的 ERP 专属管理界面，
-          提供用户权限、权限组与 X-API-KEY 的统一管理。
+          欢迎回来，<b>{{ nickName || name }}</b>。这里是自定义面板的配置台，
+          提供页面、字段与动作的统一配置，并按页面定义渲染数据表单。
         </p>
       </el-col>
       <el-col :sm="24" :lg="8">
         <el-card shadow="hover" style="margin-top: 20px">
           <div slot="header"><b>快捷入口</b></div>
           <div style="line-height: 2.4">
-            <el-button type="primary" size="mini" plain icon="el-icon-user" @click="go('/soyshttpovermcerp/user')">用户列表</el-button>
-            <el-button type="success" size="mini" plain icon="el-icon-key" @click="go('/soyshttpovermcerp/group')">权限组列表</el-button>
-            <el-button type="warning" size="mini" plain icon="el-icon-lock" @click="go('/soyshttpovermcerp/apikey')">APIKEY 管理</el-button>
-            <el-button type="info" size="mini" plain icon="el-icon-document" @click="go('/soyshttpovermcerp/lang')">语言管理</el-button>
+            <el-button type="primary" size="mini" plain icon="el-icon-document" @click="go('/custompanel/page')">页面管理</el-button>
+            <el-button type="success" size="mini" plain icon="el-icon-s-grid" @click="go('/custompanel/field')">字段管理</el-button>
+            <el-button type="warning" size="mini" plain icon="el-icon-s-operation" @click="go('/custompanel/action')">动作管理</el-button>
           </div>
         </el-card>
       </el-col>

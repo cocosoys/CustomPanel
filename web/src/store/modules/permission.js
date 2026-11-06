@@ -122,15 +122,17 @@ export function filterDynamicRoutes(routes) {
 }
 
 export const loadView = (view) => {
-  // wujie: 前缀：后端 menus() 的 component 是完整 URL（/web/plugins/&lt;id&gt;/erp/xxx），
+  // wujie: 前缀：MCERP menus() 的 component 是完整页面 URL（/web/plugins/插件名/安全目录/子路径），
   // 给 MCERP 主应用 wujie 容器加载用；子应用自己访问时需把它映射到本地 views 组件
   if (typeof view === 'string' && view.startsWith('wujie:')) {
-    const url = view.slice(6)
-    // 提取 /erp/... 之后的子路径：/web/plugins/SOYSHTTPOverMC-ERP/erp/settings/config → erp/settings/config
-    const m = url.match(/\/soyshttpovermcerp\/(.+)$/)
+    const url = view.slice(6).split('?')[0]
+    // 通用规则（与主应用 WujieLink 的 subPath 同源）：去掉 /web/plugins/插件名 前缀，
+    // 剩余「安全目录/子路径」即 views 下的组件路径
+    // （/web/plugins/CustomPanel/custompanel/page → custompanel/page）。
+    const m = url.match(/\/web\/plugins\/[^/]+\/(.+)$/)
     if (m) {
       let sub = m[1]
-      view = 'soyshttpovermcerp/' + sub
+      view = sub.replace(/\/+$/, '')
     }
   }
   if (process.env.NODE_ENV === 'development') {

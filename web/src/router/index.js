@@ -75,39 +75,46 @@ export const constantRoutes = [
 ]
 
 /**
- * CustomPanel 业务路由。
- * <p>CustomPanel 是纯 MCERP 模块（wujie 嵌入，主应用 MCERP 统一鉴权/菜单），
- * 后端 PanelExpansion.menus() 硬编码菜单 component 为 /page、/field、/action，
- * 主应用菜单点击经 bus 下发 router-push(path) → 子应用内部导航。
- * 因此本路由不做 isWujie 条件化：wujie 与独立/开发模式均直接注册（CustomPanel 无后端动态菜单）。
- * <p>菜单结构严格对齐后端 PanelExpansion.menus()；/view/:pageId 为渲染器（页面管理"打开"进入）。
+ * wujie 模式业务路由：主应用未通过 bus 下发路由时的兜底。
+ * <p><b>仅在 isWujie=true 时合并进 router</b>；独立访问时完全不加载，避免与后端 getRouters 动态路由重复。
+ * <p>path 必须与后端 PanelExpansion.menus() 自动拼接的 component 对齐：
+ * component = /web/plugins/CustomPanel/custompanel/&lt;menuId&gt;，主应用（WujieLink）取插件前缀后的
+ * 子路径作为 props.path 与 router-push 载荷，即 /custompanel/&lt;menuId&gt;。
+ * <p>/view/:pageId 为页面渲染器（页面管理"打开"进入），不属菜单，但沿用同一前缀。
  */
-export const wujieRoutes = [
+export const wujieRoutes = isWujie ? [
   {
-    path: '/page',
-    component: () => import('@/views/custompanel/page/index'),
-    name: 'CustomPanelPage',
-    meta: { title: '页面管理' }
-  },
-  {
-    path: '/field',
-    component: () => import('@/views/custompanel/field/index'),
-    name: 'CustomPanelField',
-    meta: { title: '字段管理' }
-  },
-  {
-    path: '/action',
-    component: () => import('@/views/custompanel/action/index'),
-    name: 'CustomPanelAction',
-    meta: { title: '动作管理' }
-  },
-  {
-    path: '/view/:pageId',
-    component: () => import('@/views/custompanel/render/index'),
-    name: 'CustomPanelRender',
-    meta: { title: '页面渲染' }
+    path: '/custompanel',
+    component: Layout,
+    redirect: '/custompanel/page',
+    children: [
+      {
+        path: 'page',
+        component: () => import('@/views/custompanel/page/index'),
+        name: 'CustomPanelPage',
+        meta: { title: '页面管理' }
+      },
+      {
+        path: 'field',
+        component: () => import('@/views/custompanel/field/index'),
+        name: 'CustomPanelField',
+        meta: { title: '字段管理' }
+      },
+      {
+        path: 'action',
+        component: () => import('@/views/custompanel/action/index'),
+        name: 'CustomPanelAction',
+        meta: { title: '动作管理' }
+      },
+      {
+        path: 'view/:pageId',
+        component: () => import('@/views/custompanel/render/index'),
+        name: 'CustomPanelRender',
+        meta: { title: '页面渲染' }
+      }
+    ]
   }
-]
+] : []
 
 // 动态路由（预留）：菜单由后端 getRouters 动态驱动（ERP 模块菜单），此处保持空
 export const dynamicRoutes = []

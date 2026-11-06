@@ -41,8 +41,10 @@ import java.util.List;
  *
  * <p><b>页面前缀覆写</b>：页面登记以 owner 插件名为键（{@code /web/plugins/CustomPanel}），
  * 而 {@code pageRoot()} 默认取 identifier（小写 {@code custompanel}）——二者大小写不同会导致
- * 菜单 component 指向的地址 404，故此处覆写为 owner 插件名（与 SOYSMonthlyCard 同款处理）；
- * dist 直接托管在插件页面根，无 identifier 子目录，{@code pageDirRoot()} 同步返回根路径。</p>
+ * 菜单 component 指向的地址 404，故此处覆写为 owner 插件名（与 SOYSMonthlyCard 同款处理）。
+ * {@code pageDirRoot()} 保持骨架默认（{@code pageRoot()+"/"+identifier} =
+ * {@code /web/plugins/CustomPanel/custompanel}），菜单 component 由此自动拼接，与前端
+ * {@code views/custompanel/} 目录、路由 {@code /custompanel/*} 一一对应。</p>
  */
 @CustomLog
 public class PanelExpansion extends McerpExpansion {
@@ -140,12 +142,6 @@ public class PanelExpansion extends McerpExpansion {
         return prefix == null || prefix.isEmpty() ? "/web/plugins/" + name : prefix;
     }
 
-    /** dist 直接托管在插件页面根，无 identifier 子目录。 */
-    @Override
-    public String pageDirRoot() {
-        return pageRoot();
-    }
-
     /** 无子菜单时的默认页。 */
     @Override
     protected String homeUrl() {
@@ -153,17 +149,21 @@ public class PanelExpansion extends McerpExpansion {
     }
 
     /**
-     * 菜单树：自定义面板（目录）→ 页面管理 / 字段管理 / 动作管理。
+     * 菜单树：模块本身即侧边栏顶级菜单（{@link #displayName()}="自定义面板"），
+     * 此处只声明其下的叶子菜单，不再额外套一层同名目录（避免"自定义面板 → 自定义面板"重复层级）。
+     * <p>component 不手写——{@code ErpMenus} 自动拼接
+     * {@code pageDirRoot()+"/"+menuId}（{@code /web/plugins/CustomPanel/custompanel/page|field|action}），
+     * 主应用取插件前缀后的子路径下发 {@code props.path}/{@code router-push}
+     * （{@code /custompanel/page|field|action}），与前端路由严格对齐。
      * menu 绑定各自 Controller，按钮由 {@code ControllerPermScanner}
      * 从 {@code @ApiName}/{@code @ApiPermission} 自动投影，无需手写。
      */
     @Override
     protected ErpMenus menus() {
         return ErpMenus.create()
-                .dir("custompanel", "自定义面板", "dashboard", d -> d
-                        .menu("page", "页面管理", "build", PanelPageController.class).component("/page")
-                        .menu("field", "字段管理", "list", PanelFieldController.class).component("/field")
-                        .menu("action", "动作管理", "flash-on", PanelActionController.class).component("/action"));
+                .menu("page", "页面管理", "build", PanelPageController.class)
+                .menu("field", "字段管理", "list", PanelFieldController.class)
+                .menu("action", "动作管理", "flash-on", PanelActionController.class);
     }
 
     /** 待登记端点（本类不写端点）。 */
