@@ -28,32 +28,32 @@ public class PanelActionPermissionTest {
     @SuppressWarnings("unchecked")
     public void grantedCheckerAllowsAndNormalizesNodeSeparator() {
         Function<String, Boolean> checker = mock(Function.class);
-        when(checker.apply("custompanel.action.reset")).thenReturn(Boolean.TRUE);
+        when(checker.apply("custompanel-erp.action.reset")).thenReturn(Boolean.TRUE);
 
         assertEquals(Boolean.TRUE,
-                PanelActionServiceImpl.actionPermissionGranted("custompanel:action:reset", checker));
-        verify(checker).apply("custompanel.action.reset");
+                PanelActionServiceImpl.actionPermissionGranted("custompanel-erp:action:reset", checker));
+        verify(checker).apply("custompanel-erp.action.reset");
     }
 
     @Test
     @SuppressWarnings("unchecked")
     public void deniedCheckerRejects() {
         Function<String, Boolean> checker = mock(Function.class);
-        when(checker.apply("custompanel.action.reset")).thenReturn(Boolean.FALSE);
+        when(checker.apply("custompanel-erp.action.reset")).thenReturn(Boolean.FALSE);
 
         assertEquals(Boolean.FALSE,
-                PanelActionServiceImpl.actionPermissionGranted("custompanel.action.reset", checker));
+                PanelActionServiceImpl.actionPermissionGranted("custompanel-erp.action.reset", checker));
     }
 
     @Test
     @SuppressWarnings("unchecked")
     public void unavailablePermissionServiceReturnsNull() {
-        assertNull(PanelActionServiceImpl.actionPermissionGranted("custompanel.action.reset", null));
+        assertNull(PanelActionServiceImpl.actionPermissionGranted("custompanel-erp.action.reset", null));
 
         Function<String, Boolean> broken = mock(Function.class);
         when(broken.apply(anyString())).thenThrow(new IllegalStateException("permission service down"));
 
-        assertNull(PanelActionServiceImpl.actionPermissionGranted("custompanel.action.reset", broken));
+        assertNull(PanelActionServiceImpl.actionPermissionGranted("custompanel-erp.action.reset", broken));
     }
 
     @Test

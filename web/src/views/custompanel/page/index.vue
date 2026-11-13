@@ -254,17 +254,17 @@ export default {
       this.ids = selection.map(item => item.pageId)
       this.multiple = !selection.length
     },
-    /** 打开渲染器：跳转 /custompanel/view/:pageId */
+    /** 打开渲染器：跳转 /custompanel-erp/view/:pageId */
     handleOpen(row) {
-      this.$router.push({ path: '/custompanel/view/' + row.pageId })
+      this.$router.push({ path: '/custompanel-erp/view/' + row.pageId })
     },
-    /** 跳转字段管理（预选页面）：/custompanel/field?pageId= */
+    /** 跳转字段管理（预选页面）：/custompanel-erp/field?pageId= */
     handleField(row) {
-      this.$router.push({ path: '/custompanel/field', query: { pageId: row.pageId } })
+      this.$router.push({ path: '/custompanel-erp/field', query: { pageId: row.pageId } })
     },
-    /** 跳转动作管理（预选页面）：/custompanel/action?pageId= */
+    /** 跳转动作管理（预选页面）：/custompanel-erp/action?pageId= */
     handleAction(row) {
-      this.$router.push({ path: '/custompanel/action', query: { pageId: row.pageId } })
+      this.$router.push({ path: '/custompanel-erp/action', query: { pageId: row.pageId } })
     },
     /** 图标选择回调 */
     onIconSelected(name) {

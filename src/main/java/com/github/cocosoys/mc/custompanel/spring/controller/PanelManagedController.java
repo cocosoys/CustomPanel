@@ -32,14 +32,14 @@ public class PanelManagedController {
     }
 
     @ApiName("托管实体列表")
-    @ApiPermission("custompanel:managed:list")
+    @ApiPermission("custompanel-erp:managed:list")
     @GetMapping("/entities")
     public AjaxResult entities(CredentialPresentation credential) {
         return managedService.entities(credential);
     }
 
     @ApiName("托管数据列表")
-    @ApiPermission("custompanel:managed:list")
+    @ApiPermission("custompanel-erp:managed:list")
     @GetMapping("/{entityName}/list")
     public TableDataInfo list(@PathVariable(name = "entityName") String entityName,
                               @RequestParam(name = "pageId", required = false) Long pageId,
@@ -50,7 +50,7 @@ public class PanelManagedController {
     }
 
     @ApiName("托管数据详情")
-    @ApiPermission("custompanel:managed:query")
+    @ApiPermission("custompanel-erp:managed:query")
     @GetMapping("/{entityName}/{id}")
     public AjaxResult detail(@PathVariable(name = "entityName") String entityName,
                              @PathVariable(name = "id") Long id,
@@ -60,7 +60,7 @@ public class PanelManagedController {
     }
 
     @ApiName("新增托管数据")
-    @ApiPermission("custompanel:managed:add")
+    @ApiPermission("custompanel-erp:managed:add")
     @PostMapping("/{entityName}")
     public AjaxResult add(@PathVariable(name = "entityName") String entityName,
                           @RequestBody ManagedEntityRequest request,
@@ -70,7 +70,7 @@ public class PanelManagedController {
     }
 
     @ApiName("修改托管数据")
-    @ApiPermission("custompanel:managed:edit")
+    @ApiPermission("custompanel-erp:managed:edit")
     @PutMapping("/{entityName}/{id}")
     public AjaxResult update(@PathVariable(name = "entityName") String entityName,
                              @PathVariable(name = "id") Long id,
@@ -81,7 +81,7 @@ public class PanelManagedController {
     }
 
     @ApiName("删除托管数据")
-    @ApiPermission("custompanel:managed:remove")
+    @ApiPermission("custompanel-erp:managed:remove")
     @DeleteMapping("/{entityName}/{ids}")
     public AjaxResult remove(@PathVariable(name = "entityName") String entityName,
                              @PathVariable(name = "ids") String ids,

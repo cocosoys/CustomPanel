@@ -8,7 +8,7 @@
       </app-link>
     </template>
 
-    <el-submenu v-else ref="subMenu" :index="resolvePath(item.path)" popper-append-to-body>
+    <el-submenu v-else ref="subMenu" :index="submenuIndex" popper-append-to-body>
       <template slot="title">
         <item v-if="item.meta" :icon="item.meta && item.meta.icon" :title="item.meta.title" />
       </template>
@@ -53,6 +53,17 @@ export default {
   data() {
     this.onlyOneChild = null
     return {}
+  },
+  computed: {
+    /**
+     * 子菜单 index 必须用 basePath（父层已解析好的绝对路径），不能再拿 item.path 重新解析。
+     * 原因：目录 path 是相对段（如 config），与同名叶子（config/config）解析后会得到同一个
+     * index；el-menu 以 index 作唯一键，撞车会表现为目录展不开 / 高亮错位。
+     * basePath 由上层 resolvePath 逐级拼出，天然唯一。
+     */
+    submenuIndex() {
+      return this.basePath || this.resolvePath(this.item.path)
+    }
   },
   methods: {
     hasOneShowingChild(children = [], parent) {

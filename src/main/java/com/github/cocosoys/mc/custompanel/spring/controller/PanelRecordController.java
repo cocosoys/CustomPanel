@@ -31,7 +31,7 @@ public class PanelRecordController {
     }
 
     @ApiName("记录列表")
-    @ApiPermission("custompanel:record:list")
+    @ApiPermission("custompanel-erp:record:list")
     @GetMapping("/list")
     public TableDataInfo list(@RequestParam(name = "pageNum", required = false) Integer pageNum,
                               @RequestParam(name = "pageSize", required = false) Integer pageSize,
@@ -40,21 +40,21 @@ public class PanelRecordController {
     }
 
     @ApiName("记录详情")
-    @ApiPermission("custompanel:record:query")
+    @ApiPermission("custompanel-erp:record:query")
     @GetMapping("/{recordId}")
     public AjaxResult detail(@PathVariable(name = "recordId") Long recordId) {
         return recordService.detail(recordId);
     }
 
     @ApiName("新增记录")
-    @ApiPermission("custompanel:record:add")
+    @ApiPermission("custompanel-erp:record:add")
     @PostMapping("")
     public AjaxResult add(@RequestBody PanelRecord record, CredentialPresentation credential) {
         return recordService.add(record, credential);
     }
 
     @ApiName("修改记录")
-    @ApiPermission("custompanel:record:edit")
+    @ApiPermission("custompanel-erp:record:edit")
     @PutMapping("/{recordId}")
     public AjaxResult update(@PathVariable(name = "recordId") Long recordId,
                              @RequestBody PanelRecord record,
@@ -63,7 +63,7 @@ public class PanelRecordController {
     }
 
     @ApiName("删除记录")
-    @ApiPermission("custompanel:record:remove")
+    @ApiPermission("custompanel-erp:record:remove")
     @DeleteMapping("/{recordIds}")
     public AjaxResult remove(@PathVariable(name = "recordIds") String recordIds,
                              CredentialPresentation credential) {

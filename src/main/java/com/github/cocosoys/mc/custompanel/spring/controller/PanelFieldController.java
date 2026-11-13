@@ -31,7 +31,7 @@ public class PanelFieldController {
     }
 
     @ApiName("字段列表")
-    @ApiPermission("custompanel:field:list")
+    @ApiPermission("custompanel-erp:field:list")
     @GetMapping("/list")
     public TableDataInfo list(@RequestParam(name = "pageNum", required = false) Integer pageNum,
                               @RequestParam(name = "pageSize", required = false) Integer pageSize,
@@ -42,21 +42,21 @@ public class PanelFieldController {
     }
 
     @ApiName("字段详情")
-    @ApiPermission("custompanel:field:query")
+    @ApiPermission("custompanel-erp:field:query")
     @GetMapping("/{fieldId}")
     public AjaxResult detail(@PathVariable(name = "fieldId") Long fieldId) {
         return fieldService.detail(fieldId);
     }
 
     @ApiName("新增字段")
-    @ApiPermission("custompanel:field:add")
+    @ApiPermission("custompanel-erp:field:add")
     @PostMapping("")
     public AjaxResult add(@RequestBody PanelField field, CredentialPresentation credential) {
         return fieldService.add(field, credential);
     }
 
     @ApiName("修改字段")
-    @ApiPermission("custompanel:field:edit")
+    @ApiPermission("custompanel-erp:field:edit")
     @PutMapping("/{fieldId}")
     public AjaxResult update(@PathVariable(name = "fieldId") Long fieldId,
                              @RequestBody PanelField field,
@@ -65,7 +65,7 @@ public class PanelFieldController {
     }
 
     @ApiName("删除字段")
-    @ApiPermission("custompanel:field:remove")
+    @ApiPermission("custompanel-erp:field:remove")
     @DeleteMapping("/{fieldIds}")
     public AjaxResult remove(@PathVariable(name = "fieldIds") String fieldIds,
                              CredentialPresentation credential) {

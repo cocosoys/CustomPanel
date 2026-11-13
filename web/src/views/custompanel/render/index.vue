@@ -282,7 +282,7 @@ export default {
       if (this.$route.query.from) {
         this.$router.push(this.$route.query.from)
       } else {
-        this.$router.push('/custompanel/page')
+        this.$router.push('/custompanel-erp/page')
       }
     },
     // 多选框选中数据（FREE）

@@ -12,9 +12,9 @@
         <el-card shadow="hover" style="margin-top: 20px">
           <div slot="header"><b>快捷入口</b></div>
           <div style="line-height: 2.4">
-            <el-button type="primary" size="mini" plain icon="el-icon-document" @click="go('/custompanel/page')">页面管理</el-button>
-            <el-button type="success" size="mini" plain icon="el-icon-s-grid" @click="go('/custompanel/field')">字段管理</el-button>
-            <el-button type="warning" size="mini" plain icon="el-icon-s-operation" @click="go('/custompanel/action')">动作管理</el-button>
+            <el-button type="primary" size="mini" plain icon="el-icon-document" @click="go(moduleRoot + '/page')">页面管理</el-button>
+            <el-button type="success" size="mini" plain icon="el-icon-s-grid" @click="go(moduleRoot + '/field')">字段管理</el-button>
+            <el-button type="warning" size="mini" plain icon="el-icon-s-operation" @click="go(moduleRoot + '/action')">动作管理</el-button>
           </div>
         </el-card>
       </el-col>
@@ -24,8 +24,15 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import soysContext from '@/soys/context'
 export default {
   name: 'Index',
+  data() {
+    return {
+      moduleRoot: soysContext.moduleRoot,        // 子应用路由根（/custompanel-erp）
+      appPathRoot: soysContext.moduleMatchPath   // 主应用模块路由（/custompanelerp，safeName 丢横线）
+    }
+  },
   computed: {
     ...mapGetters(['name', 'nickName'])
   },
@@ -33,7 +40,9 @@ export default {
     go(path) {
       // wujie 模式：通知主应用跳；直接访问：子应用自己 router.push
       if (window.__POWERED_BY_WUJIE__ && window.$wujie && window.$wujie.bus) {
-        window.$wujie.bus.$emit('router-push', path)
+        // 主应用路由根与子应用路由根不同源（MCERP safeName 丢弃横线），
+        // 通知主应用时必须换成主应用自己的 path，否则主应用 router 匹配不到会落到 404。
+        window.$wujie.bus.$emit('router-push', path.replace(this.moduleRoot, this.appPathRoot))
       } else {
         this.$router.push(path)
       }

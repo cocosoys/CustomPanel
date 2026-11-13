@@ -39,12 +39,24 @@ import java.util.List;
  *   <li>失败回滚：任一环节失败由骨架统一回滚，卸载时按 {@code expansion:<identifier>} tag 精确摘除。</li>
  * </ul>
  *
- * <p><b>页面前缀覆写</b>：页面登记以 owner 插件名为键（{@code /web/plugins/CustomPanel}），
- * 而 {@code pageRoot()} 默认取 identifier（小写 {@code custompanel}）——二者大小写不同会导致
- * 菜单 component 指向的地址 404，故此处覆写为 owner 插件名（与 SOYSMonthlyCard 同款处理）。
- * {@code pageDirRoot()} 保持骨架默认（{@code pageRoot()+"/"+identifier} =
- * {@code /web/plugins/CustomPanel/custompanel}），菜单 component 由此自动拼接，与前端
- * {@code views/custompanel/} 目录、路由 {@code /custompanel/*} 一一对应。</p>
+ * <p><b>三处前缀的分工</b>（改名 {@code CustomPanel-ERP} 后必须同时对齐，缺一处即 404）：</p>
+ * <ul>
+ *   <li><b>ERP 模块标识</b>：{@code CustomPanel-ERP}（{@link #getIdentifier()}）——
+ *       插件名 + {@code -ERP} 后缀，与 SOYSGiftLoft / ihomepages / SOYSOceanBox 等兄弟模块
+ *       的 ERP 侧扩张同规则；</li>
+ *   <li><b>页面 URL 前缀</b>：{@code /web/plugins/CustomPanel}——页面托管以 owner 插件名为键，
+ *       故 {@link #pageRoot()} 覆写为插件名（与 SOYSMonthlyCard 同款处理）；
+ *       若交给默认实现会得到 {@code /web/plugins/CustomPanel-ERP}，该命名空间无任何插件伺服；</li>
+ *   <li><b>子应用目录段</b>：{@code custompanel-erp}——骨架默认段由
+ *       {@code NameSafe.path(identifier)} 求得，横线会被丢弃得到 {@code custompanelerp}，
+ *       与前端路由 {@code /custompanel-erp/*} 不符，故 {@link #pageDirRoot()} 显式覆写。</li>
+ * </ul>
+ *
+ * <p>菜单 component 由此拼接为 {@code /web/plugins/CustomPanel/custompanel-erp/<menuId>}，
+ * 主应用 {@code WujieLink} 取插件前缀后的子路径 {@code /custompanel-erp/<menuId>}
+ * 作为 {@code props.path} 下发给子应用。注意主应用侧边栏模块 route 的 path 由 MCERP
+ * {@code safeName()} 生成（去横线 {@code /custompanelerp}），与本处子应用前缀不同源，
+ * 二者互不影响。</p>
  */
 @CustomLog
 public class PanelExpansion extends McerpExpansion {
@@ -87,9 +99,31 @@ public class PanelExpansion extends McerpExpansion {
         return managedRegistry;
     }
 
+    /**
+     * ERP 模块标识：{@code <插件名>-ERP}，与插件名 {@code CustomPanel} 显式区分。
+     *
+     * <p>与兄弟模块 ERP 侧扩张同规则：{@code SOYSGiftLoft-ERP} / {@code ihomepages-erp} /
+     * {@code soysoceanbox-erp} / {@code soysmonthlycard-erp}。</p>
+     */
     @Override
     public String getIdentifier() {
-        return "custompanel";
+        return "CustomPanel-ERP";
+    }
+
+    /** 子应用目录段：保留横线——{@code NameSafe.path()} 会丢弃横线得到 {@code custompanelerp}。 */
+    private static final String ERP_DIR_SEGMENT = "custompanel-erp";
+
+    /**
+     * 子应用路由前缀：{@code pageRoot() + "/custompanel-erp"}。
+     *
+     * <p>骨架默认实现用 {@code NameSafe.path(identifier)} 生成段名，横线被丢弃后为
+     * {@code custompanelerp}，菜单 component 会变成
+     * {@code /web/plugins/CustomPanel/custompanelerp/page}，与前端 {@code wujieRoutes}
+     * 的 {@code /custompanel-erp/*} 不一致，wujie 必然 404，故此处显式覆写。</p>
+     */
+    @Override
+    public String pageDirRoot() {
+        return pageRoot() + "/" + ERP_DIR_SEGMENT;
     }
 
     @Override
@@ -152,9 +186,9 @@ public class PanelExpansion extends McerpExpansion {
      * 菜单树：模块本身即侧边栏顶级菜单（{@link #displayName()}="自定义面板"），
      * 此处只声明其下的叶子菜单，不再额外套一层同名目录（避免"自定义面板 → 自定义面板"重复层级）。
      * <p>component 不手写——{@code ErpMenus} 自动拼接
-     * {@code pageDirRoot()+"/"+menuId}（{@code /web/plugins/CustomPanel/custompanel/page|field|action}），
+     * {@code pageDirRoot()+"/"+menuId}（{@code /web/plugins/CustomPanel/custompanel-erp/page|field|action}），
      * 主应用取插件前缀后的子路径下发 {@code props.path}/{@code router-push}
-     * （{@code /custompanel/page|field|action}），与前端路由严格对齐。
+     * （{@code /custompanel-erp/page|field|action}），与前端路由严格对齐。
      * menu 绑定各自 Controller，按钮由 {@code ControllerPermScanner}
      * 从 {@code @ApiName}/{@code @ApiPermission} 自动投影，无需手写。
      */

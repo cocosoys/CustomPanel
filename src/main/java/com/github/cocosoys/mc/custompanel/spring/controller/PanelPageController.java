@@ -35,7 +35,7 @@ public class PanelPageController {
     }
 
     @ApiName("页面列表")
-    @ApiPermission("custompanel:page:list")
+    @ApiPermission("custompanel-erp:page:list")
     @GetMapping("/list")
     public TableDataInfo list(@RequestParam(name = "pageNum", required = false) Integer pageNum,
                               @RequestParam(name = "pageSize", required = false) Integer pageSize,
@@ -46,28 +46,28 @@ public class PanelPageController {
     }
 
     @ApiName("页面定义聚合（Schema）")
-    @ApiPermission("custompanel:page:query")
+    @ApiPermission("custompanel-erp:page:query")
     @GetMapping("/schema/{pageId}")
     public AjaxResult schema(@PathVariable(name = "pageId") Long pageId) {
         return pageService.schema(pageId);
     }
 
     @ApiName("页面详情")
-    @ApiPermission("custompanel:page:query")
+    @ApiPermission("custompanel-erp:page:query")
     @GetMapping("/{pageId}")
     public AjaxResult detail(@PathVariable(name = "pageId") Long pageId) {
         return pageService.detail(pageId);
     }
 
     @ApiName("新增页面")
-    @ApiPermission("custompanel:page:add")
+    @ApiPermission("custompanel-erp:page:add")
     @PostMapping("")
     public AjaxResult add(@RequestBody PanelPage page, CredentialPresentation credential) {
         return pageService.add(page, credential);
     }
 
     @ApiName("修改页面")
-    @ApiPermission("custompanel:page:edit")
+    @ApiPermission("custompanel-erp:page:edit")
     @PutMapping("/{pageId}")
     public AjaxResult update(@PathVariable(name = "pageId") Long pageId,
                              @RequestBody PanelPage page,
@@ -76,7 +76,7 @@ public class PanelPageController {
     }
 
     @ApiName("删除页面")
-    @ApiPermission("custompanel:page:remove")
+    @ApiPermission("custompanel-erp:page:remove")
     @DeleteMapping("/{pageIds}")
     public AjaxResult remove(@PathVariable(name = "pageIds") String pageIds,
                              CredentialPresentation credential) {

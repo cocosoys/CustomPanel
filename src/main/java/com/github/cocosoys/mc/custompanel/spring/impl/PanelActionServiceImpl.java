@@ -43,7 +43,7 @@ import java.util.function.Function;
  * 动作目标支持 {@code {fieldKey}} 占位符插值，来源为记录 dataJson 与请求参数。</p>
  *
  * <p>动作级权限：{@code panel_action.permission} 非空时，执行前经主插件组合权限服务校验当前凭证
- * 是否持有该节点（端点权限 {@code custompanel:action:execute} 只决定能否调用执行接口，不放宽动作自身约束）；
+ * 是否持有该节点（端点权限 {@code custompanel-erp:action:execute} 只决定能否调用执行接口，不放宽动作自身约束）；
  * 为空则沿用页面权限。</p>
  *
  * <p>持久化经 SOYS {@link DATA} 门面，本插件不实现存储层。</p>

@@ -72,25 +72,25 @@ public class PanelMenusTest {
         List<ErpMenuVO> roots = buildMenus();
         Set<String> pagePerms = permsOf(roots.get(0));
         assertTrue("页面管理缺少自身按钮: " + pagePerms,
-                pagePerms.contains("custompanel:page:list"));
+                pagePerms.contains("custompanel-erp:page:list"));
         assertTrue("页面管理缺少记录按钮: " + pagePerms,
-                pagePerms.contains("custompanel:record:list"));
+                pagePerms.contains("custompanel-erp:record:list"));
         assertTrue("页面管理缺少托管实体按钮: " + pagePerms,
-                pagePerms.contains("custompanel:managed:list"));
+                pagePerms.contains("custompanel-erp:managed:list"));
 
         Set<String> fieldPerms = permsOf(roots.get(1));
-        assertFalse("字段管理不应挂记录按钮", fieldPerms.contains("custompanel:record:list"));
-        assertFalse("字段管理不应挂托管实体按钮", fieldPerms.contains("custompanel:managed:list"));
+        assertFalse("字段管理不应挂记录按钮", fieldPerms.contains("custompanel-erp:record:list"));
+        assertFalse("字段管理不应挂托管实体按钮", fieldPerms.contains("custompanel-erp:managed:list"));
     }
 
     @Test
     public void componentIsAutoPrefixedByPageDirRoot() {
         List<ErpMenuVO> roots = ErpMenus.create()
-                .setBasePrefix("/web/plugins/CustomPanel/custompanel")
+                .setBasePrefix("/web/plugins/CustomPanel/custompanel-erp")
                 .setRootPrefix("/web/plugins/CustomPanel")
                 .menu("page", "页面管理", "build", PanelPageController.class)
                 .build();
         assertEquals("component 应由 basePrefix 自动拼接",
-                "/web/plugins/CustomPanel/custompanel/page", roots.get(0).getComponent());
+                "/web/plugins/CustomPanel/custompanel-erp/page", roots.get(0).getComponent());
     }
 }

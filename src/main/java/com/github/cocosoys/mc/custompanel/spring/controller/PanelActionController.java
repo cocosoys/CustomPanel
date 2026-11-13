@@ -32,7 +32,7 @@ public class PanelActionController {
     }
 
     @ApiName("动作列表")
-    @ApiPermission("custompanel:action:list")
+    @ApiPermission("custompanel-erp:action:list")
     @GetMapping("/list")
     public TableDataInfo list(@RequestParam(name = "pageNum", required = false) Integer pageNum,
                               @RequestParam(name = "pageSize", required = false) Integer pageSize,
@@ -43,21 +43,21 @@ public class PanelActionController {
     }
 
     @ApiName("动作详情")
-    @ApiPermission("custompanel:action:query")
+    @ApiPermission("custompanel-erp:action:query")
     @GetMapping("/{actionId}")
     public AjaxResult detail(@PathVariable(name = "actionId") Long actionId) {
         return actionService.detail(actionId);
     }
 
     @ApiName("新增动作")
-    @ApiPermission("custompanel:action:add")
+    @ApiPermission("custompanel-erp:action:add")
     @PostMapping("")
     public AjaxResult add(@RequestBody PanelAction action, CredentialPresentation credential) {
         return actionService.add(action, credential);
     }
 
     @ApiName("修改动作")
-    @ApiPermission("custompanel:action:edit")
+    @ApiPermission("custompanel-erp:action:edit")
     @PutMapping("/{actionId}")
     public AjaxResult update(@PathVariable(name = "actionId") Long actionId,
                              @RequestBody PanelAction action,
@@ -66,7 +66,7 @@ public class PanelActionController {
     }
 
     @ApiName("删除动作")
-    @ApiPermission("custompanel:action:remove")
+    @ApiPermission("custompanel-erp:action:remove")
     @DeleteMapping("/{actionIds}")
     public AjaxResult remove(@PathVariable(name = "actionIds") String actionIds,
                              CredentialPresentation credential) {
@@ -74,7 +74,7 @@ public class PanelActionController {
     }
 
     @ApiName("执行动作")
-    @ApiPermission("custompanel:action:execute")
+    @ApiPermission("custompanel-erp:action:execute")
     @PostMapping("/execute/{actionId}")
     public AjaxResult execute(@PathVariable(name = "actionId") Long actionId,
                               @RequestBody ActionExecuteRequest request,
