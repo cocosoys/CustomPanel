@@ -38,21 +38,6 @@ permissions:
   custompanel-erp.record.remove:
     description: 删除记录
     default: op
-  custompanel-erp.field.list:
-    description: 字段列表
-    default: op
-  custompanel-erp.field.query:
-    description: 字段查询
-    default: op
-  custompanel-erp.field.add:
-    description: 新增字段
-    default: op
-  custompanel-erp.field.edit:
-    description: 编辑字段
-    default: op
-  custompanel-erp.field.remove:
-    description: 删除字段
-    default: op
   custompanel-erp.action.list:
     description: 动作列表
     default: op
@@ -85,4 +70,31 @@ permissions:
     default: op
   custompanel-erp.managed.remove:
     description: 删除托管数据
+    default: op
+  custompanel-erp.layout.query:
+    description: 查询页面布局
+    default: op
+  custompanel-erp.layout.add:
+    description: 保存布局草稿
+    default: op
+  custompanel-erp.layout.edit:
+    description: 发布布局
+    default: op
+  custompanel-erp.layout.remove:
+    description: 删除布局
+    default: op
+  custompanel-erp.event.list:
+    description: 事件列表
+    default: op
+  custompanel-erp.event.query:
+    description: 事件查询
+    default: op
+  custompanel-erp.event.add:
+    description: 新增事件
+    default: op
+  custompanel-erp.event.edit:
+    description: 修改事件
+    default: op
+  custompanel-erp.event.remove:
+    description: 删除事件
     default: op

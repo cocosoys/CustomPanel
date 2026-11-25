@@ -3,6 +3,7 @@ package com.github.cocosoys.mc.custompanel.spring.service;
 import com.github.cocosoys.mc.custompanel.spring.entity.PanelAction;
 import com.github.cocosoys.mc.custompanel.spring.entity.vo.ActionDefVO;
 import com.github.cocosoys.mc.custompanel.spring.entity.vo.ActionExecuteRequest;
+import com.github.cocosoys.mc.custompanel.spring.entity.vo.InlineExecuteRequest;
 import com.github.cocosoys.mc.soyshttpovermc.util.AjaxResult;
 import com.github.cocosoys.mc.soyshttpovermc.util.TableDataInfo;
 import com.github.cocosoys.mc.soyshttpovermc.web.gateway.policy.auth.issuer.CredentialPresentation;
@@ -81,4 +82,18 @@ public interface IPanelActionService {
      * @return AjaxResult（派发成功 / 参数或安全校验失败）
      */
     AjaxResult execute(Long actionId, ActionExecuteRequest request, CredentialPresentation credential);
+
+    /**
+     * 执行设计器内联命令（{@code POST /panel/action/execute-inline}）。
+     *
+     * <p>仅接受 HTTP / INTERNAL，COMMAND 直接拒绝——命令必须绑定已有 action。
+     * 不落库，复用 {@link #execute} 的分派引擎（插值 / SSRF / 审计）；端点权限由
+     * {@code custompanel-erp:action:execute} 声明，内联模板长度由
+     * {@code designer.max-inline-target-bytes} 约束。</p>
+     *
+     * @param request    内联请求（type / target / params / pageId / recordId）
+     * @param credential 调用方凭证
+     * @return AjaxResult（派发成功 / 参数或安全校验失败）
+     */
+    AjaxResult executeInline(InlineExecuteRequest request, CredentialPresentation credential);
 }

@@ -30,9 +30,6 @@ custompanel.record.missing-recordId: 缺少 recordId
 custompanel.record.data-empty: 数据内容不能为空
 custompanel.record.page-not-free: 仅自由模式页面可写入记录
 
-# ---------- 字段定义 ----------
-custompanel.field.key-exists: 字段键已存在（同页面内不可重复）
-
 # ---------- 动作定义 ----------
 custompanel.action.key-exists: 动作键已存在（同页面内不可重复）
 custompanel.action.target-empty: 动作目标不能为空
@@ -59,8 +56,41 @@ custompanel.log.expansion-registered: 面板扩展注册完成 -> {0}
 custompanel.log.soys-not-ready: SOYSHTTPOverMC 未就绪，等待 SoysReadyEvent 兜底注册
 custompanel.log.mcerp-not-ready: MCERP 未就绪，跳过 ERP 登记（reload 时兜底补登记）-> {0}
 custompanel.log.page-added: 页面已新增 -> {0}
-custompanel.log.page-removed: 页面已删除 -> 字段 {0} 条，动作 {1} 条，记录 {2} 条
+custompanel.log.page-removed: 页面已删除 -> 布局 {0} 条，事件 {1} 条，动作 {2} 条，记录 {3} 条，旧字段 {4} 条
 custompanel.log.record-added: 记录已新增 -> pageId {0}
 custompanel.log.action-executed: 动作已执行 -> {0}，目标：{1}，结果：{2}
 custompanel.log.action-execute-failed: 动作执行异常 -> {0}，原因：{1}
 custompanel.log.managed-added: 托管数据已新增 -> entity {0}, pageId {1}, recordId {2}
+
+# ---------- 页面设计器 · 布局（confJson 单源） ----------
+custompanel.layout.missing-pageId: 缺少 pageId
+custompanel.layout.missing-layoutId: 缺少 layoutId
+custompanel.layout.not-found: 布局不存在
+custompanel.layout.too-many-fields: 控件数超限（上限 {0}，当前 {1}）
+custompanel.layout.conf-too-large: 布局数据超限（上限 {0} 字节，当前 {1}）
+custompanel.layout.publish-success: 发布成功
+
+# ---------- 页面设计器 · 事件绑定 ----------
+custompanel.event.not-found: 事件不存在
+custompanel.event.missing-eventId: 缺少 eventId
+custompanel.event.empty: 事件内容不能为空
+custompanel.event.trigger-invalid: 触发时机非法（onLoad/onChange/onClick/beforeSubmit/afterSubmit）
+custompanel.event.inline-type-invalid: 内联类型非法（仅 HTTP / INTERNAL）
+custompanel.event.inline-type-missing: 填写内联命令时必须选择内联类型
+custompanel.event.inline-target-empty: 内联类型已选，内联命令不能为空
+custompanel.event.inline-target-too-large: 内联命令超限（上限 {0} 字节，当前 {1}）
+custompanel.event.action-not-found: 绑定的动作不存在
+custompanel.event.no-action: 事件必须绑定动作或填写内联命令
+custompanel.event.condition-invalid: 条件 JSON 格式非法
+
+# ---------- 页面设计器 · 内联命令 ----------
+custompanel.inline.empty: 内联命令请求不能为空
+custompanel.inline.type-invalid: 内联类型非法（仅 HTTP / INTERNAL，COMMAND 必须绑定已有动作）
+custompanel.inline.target-too-large: 内联命令超限（上限 {0} 字节，当前 {1}）
+
+# ---------- 页面设计器 · 日志 ----------
+custompanel.log.layout-saved: 布局草稿已保存 -> pageId {0}, version {1}
+custompanel.log.layout-published: 布局已发布 -> pageId {0}, version {1}
+custompanel.log.layout-migrated: 旧字段已迁移为布局 -> pageId {0}, 字段 {1} 条
+custompanel.log.event-saved: 事件已保存 -> pageId {0}, trigger {1}, targetKey {2}
+custompanel.log.inline-executed: 内联命令已派发 -> type {0}, target {1}, pageId {2}

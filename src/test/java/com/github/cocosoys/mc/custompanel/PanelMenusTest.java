@@ -11,7 +11,8 @@ import java.util.Set;
 import org.junit.Test;
 
 import com.github.cocosoys.mc.custompanel.spring.controller.PanelActionController;
-import com.github.cocosoys.mc.custompanel.spring.controller.PanelFieldController;
+import com.github.cocosoys.mc.custompanel.spring.controller.PanelEventController;
+import com.github.cocosoys.mc.custompanel.spring.controller.PanelLayoutController;
 import com.github.cocosoys.mc.custompanel.spring.controller.PanelManagedController;
 import com.github.cocosoys.mc.custompanel.spring.controller.PanelPageController;
 import com.github.cocosoys.mc.custompanel.spring.controller.PanelRecordController;
@@ -35,8 +36,9 @@ public class PanelMenusTest {
         return ErpMenus.create()
                 .menu("page", "页面管理", "build", PanelPageController.class)
                 .permsFrom(PanelRecordController.class, PanelManagedController.class)
-                .menu("field", "字段管理", "list", PanelFieldController.class)
                 .menu("action", "动作管理", "flash-on", PanelActionController.class)
+                .menu("designer", "页面设计器", "edit", PanelLayoutController.class)
+                .permsFrom(PanelEventController.class)
                 .build();
     }
 
@@ -58,10 +60,10 @@ public class PanelMenusTest {
     @Test
     public void menusAreFlatModuleChildrenWithoutDuplicatedDir() {
         List<ErpMenuVO> roots = buildMenus();
-        assertEquals("模块下应只有 3 条平铺菜单", 3, roots.size());
+        assertEquals("模块下应有 3 条平铺菜单（页面/动作/设计器）", 3, roots.size());
         assertEquals("page", roots.get(0).getMenuId());
-        assertEquals("field", roots.get(1).getMenuId());
-        assertEquals("action", roots.get(2).getMenuId());
+        assertEquals("action", roots.get(1).getMenuId());
+        assertEquals("designer", roots.get(2).getMenuId());
         for (ErpMenuVO root : roots) {
             assertEquals("子菜单必须是 C 菜单（dir 会重复模块层级）", "C", root.getMenuType());
         }
@@ -77,10 +79,22 @@ public class PanelMenusTest {
                 pagePerms.contains("custompanel-erp:record:list"));
         assertTrue("页面管理缺少托管实体按钮: " + pagePerms,
                 pagePerms.contains("custompanel-erp:managed:list"));
+        assertFalse("页面管理不应挂设计器按钮", pagePerms.contains("custompanel-erp:layout:query"));
+    }
 
-        Set<String> fieldPerms = permsOf(roots.get(1));
-        assertFalse("字段管理不应挂记录按钮", fieldPerms.contains("custompanel-erp:record:list"));
-        assertFalse("字段管理不应挂托管实体按钮", fieldPerms.contains("custompanel-erp:managed:list"));
+    @Test
+    public void designerMenuCarriesLayoutAndEventButtons() {
+        List<ErpMenuVO> roots = buildMenus();
+        Set<String> perms = permsOf(roots.get(2));
+
+        assertTrue("设计器缺少布局按钮: " + perms,
+                perms.contains("custompanel-erp:layout:query"));
+        assertTrue("设计器缺少布局发布按钮: " + perms,
+                perms.contains("custompanel-erp:layout:edit"));
+        assertTrue("设计器缺少事件按钮: " + perms,
+                perms.contains("custompanel-erp:event:list"));
+        assertTrue("设计器缺少事件新增按钮: " + perms,
+                perms.contains("custompanel-erp:event:add"));
     }
 
     @Test

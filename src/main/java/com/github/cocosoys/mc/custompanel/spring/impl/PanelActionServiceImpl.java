@@ -8,6 +8,7 @@ import com.github.cocosoys.mc.custompanel.spring.entity.PanelPage;
 import com.github.cocosoys.mc.custompanel.spring.entity.PanelRecord;
 import com.github.cocosoys.mc.custompanel.spring.entity.vo.ActionDefVO;
 import com.github.cocosoys.mc.custompanel.spring.entity.vo.ActionExecuteRequest;
+import com.github.cocosoys.mc.custompanel.spring.entity.vo.InlineExecuteRequest;
 import com.github.cocosoys.mc.custompanel.spring.service.IPanelActionService;
 import com.github.cocosoys.mc.custompanel.util.PanelAuth;
 import com.github.cocosoys.mc.soyshttpovermc.HttpOverMcPlugin;
@@ -24,6 +25,7 @@ import org.bukkit.Bukkit;
 
 import java.net.InetAddress;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -273,23 +275,73 @@ public class PanelActionServiceImpl implements IPanelActionService {
         return AjaxResult.error(t("custompanel.action.type-invalid", "动作类型非法（COMMAND/HTTP/INTERNAL）"));
     }
 
+    @Override
+    public AjaxResult executeInline(InlineExecuteRequest request, CredentialPresentation credential) {
+        if (request == null) {
+            return AjaxResult.error(t("custompanel.inline.empty", "内联命令请求不能为空"));
+        }
+        String type = request.getType() == null ? "" : request.getType().trim().toUpperCase();
+        if (!INLINE_TYPE.valid(type)) {
+            return AjaxResult.error(t("custompanel.inline.type-invalid",
+                    "内联类型非法（仅 HTTP / INTERNAL，COMMAND 必须绑定已有动作）"));
+        }
+        String target = request.getTarget();
+        if (target == null || target.trim().isEmpty()) {
+            return AjaxResult.error(t("custompanel.action.target-empty", "动作目标不能为空"));
+        }
+        int bytes = target.getBytes(StandardCharsets.UTF_8).length;
+        int max = maxInlineTargetBytes();
+        if (bytes > max) {
+            return AjaxResult.error(t("custompanel.inline.target-too-large",
+                    "内联命令超限（上限 {0} 字节，当前 {1}）", max, bytes));
+        }
+        // 内联命令不落库：构造临时动作作为既有分派引擎的载体，复用插值 / SSRF / 审计。
+        // 端点权限由 @ApiPermission("custompanel-erp:action:execute") 统一声明。
+        Map<String, String> context = buildContext(request.getParams(), request.getRecordId());
+        PanelAction holder = new PanelAction();
+        holder.setActionKey("inline");
+        holder.setActionType(type);
+        holder.setActionTarget(target);
+        AjaxResult dispatched = PanelAction.ActionType.HTTP.equals(type)
+                ? executeHttp(holder, context) : executeInternal(holder, context);
+        // 仅真正进入异步分派才记「已派发」；被同步安全校验拒绝的请求不写误导性审计日志
+        if (AjaxResult.SUCCESS == dispatched.getCode()) {
+            log.infoT("custompanel.log.inline-executed", "内联命令已派发 -> type {0}, target {1}, pageId {2}",
+                    type, target, request.getPageId());
+        }
+        return dispatched;
+    }
+
+    /** 内联类型白名单：COMMAND 不在其列（必须绑定已有 action）。 */
+    public static final class INLINE_TYPE {
+        private INLINE_TYPE() {
+        }
+
+        public static boolean valid(String type) {
+            return PanelAction.ActionType.HTTP.equals(type) || PanelAction.ActionType.INTERNAL.equals(type);
+        }
+    }
+
     // ===== 执行引擎（分派） =====
 
     /** 构建插值上下文：请求参数优先，记录 dataJson 键值补充（同名不覆盖）。 */
     private Map<String, String> buildContext(ActionExecuteRequest request) {
+        return request == null ? new HashMap<>()
+                : buildContext(request.getParams(), request.getRecordId());
+    }
+
+    /** 构建插值上下文（内联命令复用同一来源与优先级）。 */
+    private Map<String, String> buildContext(Map<String, String> params, Long recordId) {
         Map<String, String> context = new HashMap<>();
-        if (request == null) {
-            return context;
-        }
-        if (request.getParams() != null) {
-            for (Map.Entry<String, String> e : request.getParams().entrySet()) {
+        if (params != null) {
+            for (Map.Entry<String, String> e : params.entrySet()) {
                 if (e.getKey() != null && e.getValue() != null) {
                     context.put(e.getKey(), e.getValue());
                 }
             }
         }
-        if (request.getRecordId() != null) {
-            PanelRecord rec = DATA.get(PanelRecord.class, request.getRecordId());
+        if (recordId != null) {
+            PanelRecord rec = DATA.get(PanelRecord.class, recordId);
             if (rec != null && rec.getDataJson() != null && !rec.getDataJson().trim().isEmpty()) {
                 try {
                     Map<String, Object> data = JsonReader.parseObject(rec.getDataJson());
@@ -304,6 +356,13 @@ public class PanelActionServiceImpl implements IPanelActionService {
             }
         }
         return context;
+    }
+
+    /** config.yml 未配置时内联命令长度上限（4 KiB）。 */
+    private int maxInlineTargetBytes() {
+        int defaultValue = 4096;
+        return plugin == null ? defaultValue
+                : plugin.getConfig().getInt("designer.max-inline-target-bytes", defaultValue);
     }
 
     /** 占位符插值：target 中 {@code {key}} ← context.get(key)；未命中保留原样。 */

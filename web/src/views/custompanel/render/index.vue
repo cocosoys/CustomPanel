@@ -97,27 +97,38 @@
                   title="该页面尚未配置字段，将直接编辑 dataJson 原始 JSON。" style="margin-bottom: 12px" />
         <el-alert v-if="!formFields.length && !isFree" type="warning" show-icon :closable="false"
                   title="托管页面必须配置字段定义才能写入数据。" style="margin-bottom: 12px" />
-        <el-form ref="dataForm" :model="formData" :rules="formRules" label-width="120px">
-          <el-form-item v-for="f in formFields" :key="f.fieldKey" :label="f.fieldName"
-                        :prop="f.fieldKey" :rules="fieldRule(f)">
-            <el-input v-if="f.fieldType === 'STRING'" v-model="formData[f.fieldKey]"
-                      :placeholder="f.defaultValue ? '默认：' + f.defaultValue : ''" />
-            <el-input-number v-else-if="f.fieldType === 'NUMBER'" v-model="formData[f.fieldKey]"
-                             :controls-position="'right'" style="width: 100%" />
-            <el-switch v-else-if="f.fieldType === 'BOOLEAN'" v-model="formData[f.fieldKey]"
-                       active-text="是" inactive-text="否" />
-            <el-date-picker v-else-if="f.fieldType === 'DATE'" v-model="formData[f.fieldKey]"
-                            type="datetime" value-format="yyyy-MM-dd HH:mm:ss"
-                            placeholder="选择日期时间" style="width: 100%" />
-            <el-input v-else-if="f.fieldType === 'TEXT'" v-model="formData[f.fieldKey]"
-                      type="textarea" :rows="3" :placeholder="f.defaultValue ? '默认：' + f.defaultValue : ''" />
-            <el-select v-else-if="f.fieldType === 'SELECT'" v-model="formData[f.fieldKey]"
-                       :placeholder="f.defaultValue ? '默认：' + f.defaultValue : ''" style="width: 100%">
-              <el-option v-for="o in optionList(f.options)" :key="o" :label="o" :value="o" />
-            </el-select>
-            <el-input v-else v-model="formData[f.fieldKey]" placeholder="请输入" />
-          </el-form-item>
-          <el-form-item v-if="!formFields.length && isFree" label="dataJson">
+        <el-form ref="dataForm" :model="formData" :rules="activeRules" :label-width="formLabelWidth">
+          <!-- confJson 单源渲染：有 layout 时由 render.js 解释 RuoYi 控件 conf -->
+          <template v-if="hasLayout">
+            <el-form-item v-for="f in confFields" :key="'conf-' + f.vModel" :label="f.label"
+                          :prop="f.vModel" :rules="activeRules[f.vModel]">
+              <FormRender :conf="f" v-model="formData[f.vModel]"
+                          @change="onFieldChange(f, $event)" @click="onFieldClick(f)" />
+            </el-form-item>
+          </template>
+          <!-- 旧字段兼容分支：无布局的遗留页面（后端首次拉取 schema 时一次性迁移为 layout，迁移完成前走此分支） -->
+          <template v-else>
+            <el-form-item v-for="f in formFields" :key="f.fieldKey" :label="f.fieldName"
+                          :prop="f.fieldKey" :rules="fieldRule(f)">
+              <el-input v-if="f.fieldType === 'STRING'" v-model="formData[f.fieldKey]"
+                        :placeholder="f.defaultValue ? '默认：' + f.defaultValue : ''" />
+              <el-input-number v-else-if="f.fieldType === 'NUMBER'" v-model="formData[f.fieldKey]"
+                               :controls-position="'right'" style="width: 100%" />
+              <el-switch v-else-if="f.fieldType === 'BOOLEAN'" v-model="formData[f.fieldKey]"
+                         active-text="是" inactive-text="否" />
+              <el-date-picker v-else-if="f.fieldType === 'DATE'" v-model="formData[f.fieldKey]"
+                              type="datetime" value-format="yyyy-MM-dd HH:mm:ss"
+                              placeholder="选择日期时间" style="width: 100%" />
+              <el-input v-else-if="f.fieldType === 'TEXT'" v-model="formData[f.fieldKey]"
+                        type="textarea" :rows="3" :placeholder="f.defaultValue ? '默认：' + f.defaultValue : ''" />
+              <el-select v-else-if="f.fieldType === 'SELECT'" v-model="formData[f.fieldKey]"
+                         :placeholder="f.defaultValue ? '默认：' + f.defaultValue : ''" style="width: 100%">
+                <el-option v-for="o in optionList(f.options)" :key="o" :label="o" :value="o" />
+              </el-select>
+              <el-input v-else v-model="formData[f.fieldKey]" placeholder="请输入" />
+            </el-form-item>
+          </template>
+          <el-form-item v-if="!formFields.length && !hasLayout && isFree" label="dataJson">
             <el-input v-model="rawJson" type="textarea" :rows="8"
                       placeholder="JSON 对象，如 {\"name\":\"张三\",\"age\":20}" />
           </el-form-item>
@@ -137,17 +148,31 @@
 import { schemaPage } from '@/api/custompanel'
 import { listRecord, addRecord, editRecord, removeRecord, executeAction } from '@/api/custompanel'
 import { managedList, managedAdd, managedUpdate, managedRemove } from '@/api/custompanel'
+import FormRender from '@/utils/generator/render'
+import {
+  parseLayout, renderableFields, buildRules, buildFormModel, normalizeValue, toSubmitData, toParams
+} from '@/utils/generator/adapter'
+import { fireEvent } from '@/utils/panelEvent'
 
 export default {
   name: 'CustomPanelRender',
+  components: { FormRender },
   data() {
     return {
       // 遮罩层
       loading: true,
       // 页面 ID（路由参数）
       pageId: undefined,
-      // Schema：{ page, fields, actions }
-      schema: { page: null, fields: [], actions: [] },
+      // Schema：{ page, layout, fields, events, actions }
+      schema: { page: null, layout: null, fields: [], events: [], actions: [] },
+      // confJson 单源渲染状态（有 layout 时走 render.js，否则旧字段分支）
+      hasLayout: false,
+      rawFields: [],
+      confFields: [],
+      confRules: {},
+      formConf: {},
+      // onLoad 只触发一次，避免列表/托管双通道重复触发
+      loadEventFired: false,
       // 动态列（字段定义 → 表格列）
       columns: [],
       // 自由模式记录表格数据
@@ -190,6 +215,19 @@ export default {
     formRules() {
       return {}
     },
+    // 生效校验规则：confJson 分支由 required/regList 生成，旧分支沿用字段定义
+    activeRules() {
+      return this.hasLayout ? this.confRules : this.formRules
+    },
+    // 表单标签宽度取 formConf.labelWidth（RuoYi 默认值 100）
+    formLabelWidth() {
+      const w = this.formConf && this.formConf.labelWidth
+      return w ? String(w) + 'px' : '120px'
+    },
+    // 事件条件 DSL 的字段白名单（当前页 fieldKey）
+    allowedFields() {
+      return (this.schema.fields || []).map(f => f.fieldKey)
+    },
     // 是否自由模式（对话框 dataJson 分支判定）
     isFree() {
       return !this.schema.page || this.schema.page.storeMode === 'FREE'
@@ -200,11 +238,13 @@ export default {
     this.loadSchema()
   },
   methods: {
-    /** 加载页面 Schema（page + fields + actions），按模式拉取数据 */
+    /** 加载页面 Schema（page + layout + fields + events + actions），按模式拉取数据 */
     loadSchema() {
       this.loading = true
+      this.loadEventFired = false
       schemaPage(this.pageId).then(response => {
-        this.schema = response.data || { page: null, fields: [], actions: [] }
+        this.schema = response.data || { page: null, layout: null, fields: [], events: [], actions: [] }
+        this.prepareConf()
         this.buildColumns()
         if (this.schema.page && this.schema.page.storeMode === 'FREE') {
           this.getList()
@@ -212,10 +252,30 @@ export default {
           this.loadManagedList()
         } else {
           this.loading = false
+          this.fireLoadEvent()
         }
       }).catch(() => {
-        this.schema = { page: null, fields: [], actions: [] }
+        this.schema = { page: null, layout: null, fields: [], events: [], actions: [] }
+        this.prepareConf()
         this.loading = false
+      })
+    },
+    /** 解析 confJson 单源布局，准备 render.js 控件与校验规则 */
+    prepareConf() {
+      const parsed = parseLayout(this.schema.layout)
+      this.hasLayout = !!this.schema.layout
+      this.formConf = parsed ? parsed.formConf : {}
+      this.rawFields = parsed ? parsed.fields : []
+      this.confFields = renderableFields(this.rawFields)
+      this.confRules = parsed ? buildRules(this.rawFields) : {}
+    },
+    /** 页面加载完成事件（onLoad）：列表数据就绪后触发一次 */
+    fireLoadEvent() {
+      if (this.loadEventFired || !this.schema.page) return
+      this.loadEventFired = true
+      fireEvent('onLoad', null, this.buildContext(), {
+        events: this.schema.events,
+        allowedFields: this.allowedFields
       })
     },
     /** 构建动态列表列：showInList='1' 字段（升序）；无展示字段时用全部字段 */
@@ -239,6 +299,7 @@ export default {
         this.total = response.total
         if (!this.columns.length) this.buildColumns()
         this.loading = false
+        this.fireLoadEvent()
       })
     },
     /** 托管数据列表（MANAGED）：经实体处理器，行键 = 字段 fieldKey */
@@ -249,6 +310,7 @@ export default {
           this.managedRows = response.rows || []
           this.managedTotal = response.total
           this.managedLoading = false
+          this.fireLoadEvent()
         }).catch(() => {
           this.managedRows = []
           this.managedTotal = 0
@@ -295,11 +357,51 @@ export default {
       this.managedIds = selection.map(item => item.id)
       this.managedMultiple = !selection.length
     },
-    /** 动作按钮：真实调用执行端点（COMMAND/HTTP/INTERNAL 由后端按类型分派） */
+    /** 事件上下文：{ pageId, recordId, operator, ...formData, _row } */
+    buildContext(row) {
+      const ctx = {
+        pageId: this.pageId,
+        recordId: this.currentRecordId || this.currentManagedId ||
+          (row && (row.recordId || row.id)) || undefined,
+        operator: (this.$store && this.$store.getters && this.$store.getters.name) || ''
+      }
+      Object.keys(this.formData || {}).forEach(k => {
+        if (!(k in ctx)) ctx[k] = this.formData[k]
+      })
+      ctx._row = row || null
+      return ctx
+    },
+    /** conf 控件值变化 → onChange 事件（targetKey = vModel） */
+    onFieldChange(field, value) {
+      if (!field || !field.vModel) return
+      fireEvent('onChange', field.vModel, this.buildContext(), {
+        events: this.schema.events,
+        allowedFields: this.allowedFields
+      })
+    },
+    /** conf 控件点击 → onClick 事件（targetKey = vModel） */
+    onFieldClick(field) {
+      if (!field || !field.vModel) return
+      fireEvent('onClick', field.vModel, this.buildContext(), {
+        events: this.schema.events,
+        allowedFields: this.allowedFields
+      })
+    },
+    /** 动作按钮：onClick 事件 + 真实上下文注入（原先传 {}，后端 {fieldKey} 插值断链） */
     handleAction(a) {
       const run = () => {
+        const ctx = this.buildContext()
+        fireEvent('onClick', a.actionKey, ctx, {
+          events: this.schema.events,
+          allowedFields: this.allowedFields
+        })
         this.actionLoading = a.actionId
-        executeAction(a.actionId, {}).then(response => {
+        // 后端 ActionExecuteRequest 只认 params/recordId：把上下文收敛为插值参数
+        executeAction(a.actionId, {
+          params: toParams(ctx),
+          pageId: ctx.pageId,
+          recordId: ctx.recordId
+        }).then(response => {
           this.actionLoading = undefined
           this.msgSuccess(response.msg || '动作已派发执行')
         }).catch(() => {
@@ -325,6 +427,10 @@ export default {
     },
     /** 修改按钮（按模式） */
     handleUpdate(row) {
+      fireEvent('onClick', 'edit', this.buildContext(row), {
+        events: this.schema.events,
+        allowedFields: this.allowedFields
+      })
       this.resetFormData()
       if (!this.isFree) {
         this.currentManagedId = row.id
@@ -340,6 +446,12 @@ export default {
     },
     /** 行数据 → 表单模型回填（按字段类型转换） */
     fillForm(obj) {
+      if (this.hasLayout) {
+        this.rawFields.forEach(f => {
+          if (f && f.vModel) this.formData[f.vModel] = normalizeValue(f, obj[f.vModel])
+        })
+        return
+      }
       const fields = this.formFields
       if (fields.length) {
         for (const f of fields) {
@@ -361,6 +473,10 @@ export default {
       this.currentRecordId = undefined
       this.currentManagedId = undefined
       this.rawJson = ''
+      if (this.hasLayout) {
+        this.formData = buildFormModel(this.rawFields)
+        return
+      }
       const data = {}
       for (const f of this.formFields) {
         if (f.fieldType === 'NUMBER') {
@@ -379,17 +495,11 @@ export default {
     cancel() {
       this.open = false
     },
-    /** 提交（按模式）：FREE → dataJson；MANAGED → {pageId, data} */
+    /** 提交：校验通过 → beforeSubmit 事件 → 保存 → afterSubmit 事件 */
     submitForm() {
-      if (this.formFields.length) {
+      if (this.formFields.length || this.hasLayout) {
         this.$refs.dataForm.validate(valid => {
-          if (valid) {
-            if (this.isFree) {
-              this.saveRecord(JSON.stringify(this.formData))
-            } else {
-              this.saveManaged(this.formData)
-            }
-          }
+          if (valid) this.runBeforeSubmit(() => this.doSubmit())
         })
         return
       }
@@ -401,11 +511,46 @@ export default {
             this.$message.error('dataJson 必须是 JSON 对象')
             return
           }
-          this.saveRecord(JSON.stringify(obj))
+          this.runBeforeSubmit(() => this.doSubmit(obj))
         } catch (e) {
           this.$message.error('dataJson 不是合法 JSON：' + e.message)
         }
       }
+    },
+    /** beforeSubmit：仅显式 blocked=true 阻断，其余失败记日志继续 */
+    runBeforeSubmit(next) {
+      fireEvent('beforeSubmit', null, this.buildContext(), {
+        events: this.schema.events,
+        allowedFields: this.allowedFields
+      }).then(result => {
+        if (result.blocked) {
+          this.$message.warning('提交被事件阻断')
+          return
+        }
+        next()
+      }).catch(() => next())
+    },
+    /** 实际保存：confJson 分支按控件类型归一，旧分支沿用字段定义 */
+    doSubmit(rawObj) {
+      if (this.hasLayout) {
+        const data = toSubmitData(this.rawFields, this.formData)
+        if (this.isFree) this.saveRecord(JSON.stringify(data))
+        else this.saveManaged(data)
+        return
+      }
+      if (rawObj) {
+        this.saveRecord(JSON.stringify(rawObj))
+        return
+      }
+      if (this.isFree) this.saveRecord(JSON.stringify(this.formData))
+      else this.saveManaged(this.formData)
+    },
+    /** afterSubmit：保存成功后触发（非阻断） */
+    fireAfterSubmit() {
+      fireEvent('afterSubmit', null, this.buildContext(), {
+        events: this.schema.events,
+        allowedFields: this.allowedFields
+      })
     },
     /** 保存记录（FREE 新增 / 修改） */
     saveRecord(dataJson) {
@@ -414,12 +559,14 @@ export default {
         editRecord(this.currentRecordId, payload).then(() => {
           this.msgSuccess('修改成功')
           this.open = false
+          this.fireAfterSubmit()
           this.getList()
         })
       } else {
         addRecord(payload).then(() => {
           this.msgSuccess('新增成功')
           this.open = false
+          this.fireAfterSubmit()
           this.getList()
         })
       }
@@ -437,18 +584,24 @@ export default {
         managedUpdate(this.schema.page.entityName, this.currentManagedId, payload).then(() => {
           this.msgSuccess('修改成功')
           this.open = false
+          this.fireAfterSubmit()
           this.loadManagedList()
         })
       } else {
         managedAdd(this.schema.page.entityName, payload).then(() => {
           this.msgSuccess('新增成功')
           this.open = false
+          this.fireAfterSubmit()
           this.loadManagedList()
         })
       }
     },
     /** 删除按钮（按模式） */
     handleDelete(row) {
+      fireEvent('onClick', 'delete', this.buildContext(row), {
+        events: this.schema.events,
+        allowedFields: this.allowedFields
+      })
       if (!this.isFree) {
         const ids = row.id || this.managedIds
         this.$confirm('确认删除选中的托管数据？', '删除确认', {

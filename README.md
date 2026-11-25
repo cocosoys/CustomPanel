@@ -43,7 +43,7 @@ mvn -o test
 
 | 测试类 | 覆盖点 |
 | --- | --- |
-| `PanelFieldServiceImplTest` | 同页 `fieldKey` 唯一（忽略大小写）、改页后唯一性重校验 |
+| `PanelLayoutServiceImplTest` | confJson 单源：字段上限、版本唯一、旧 `panel_field` 数据迁移（fieldType→Element tag 映射） |
 | `PanelRecordServiceImplTest` | FREE 模式不变量：拒绝向 MANAGED 页面写入 / 迁移记录 |
 | `PanelActionPermissionTest` | 动作级权限三分支：放行、拒绝、权限服务不可用时降级 |
 
@@ -92,8 +92,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-git-hooks.ps
 
 1. 将 `CustomPanel-<version>.jar` 放入服务端 `plugins/`；
 2. 确保 `SOYSHTTPOverMC`、`MCERP` 已安装并启用（`plugin.yml` 中为硬依赖）；
-3. 数据表 `panel_page`、`panel_field`、`panel_action`、`panel_record` 由 SOYS 数据层自动创建；
-4. 权限节点共 26 个，前缀 `custompanel.*`，完整列表见 `src/main/resources/plugin.yml`。
+3. 数据表 `panel_page`、`panel_layout`、`panel_event`、`panel_action`、`panel_record` 由 SOYS 数据层自动创建（`panel_field` 仅作旧数据迁移来源，P4 起不再写入）；
+4. 权限节点共 30 个，前缀 `custompanel-erp.*`，完整列表见 `src/main/resources/plugin.yml`。
 
 ## 配置
 
@@ -115,10 +115,15 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-git-hooks.ps
 | 前缀 | 端点 |
 | --- | --- |
 | `/panel/page` | list / schema / detail / add / update / remove |
-| `/panel/field` | list / detail / add / update / remove |
-| `/panel/action` | list / detail / add / update / remove / execute |
+| `/panel/action` | list / detail / add / update / remove / execute / execute-inline |
+| `/panel/layout` | detail / save / publish / remove |
+| `/panel/event` | list / detail / add / update / remove |
 | `/panel/record` | list / detail / add / update / remove |
 | `/panel/managed` | entities / list / detail / add / update / remove |
+
+字段定义不再有独立端点：页面表单/列表列的字段元数据由 `panel_layout.fieldsJson` 单源承载，
+经 `/panel/page/schema/{pageId}` 下发给渲染器；旧 `panel_field` 表仅在首次访问无布局的遗留页面时
+一次性迁移，之后不再写入。
 
 ## 前端壳层升级（重新同步 `web/`）
 
@@ -126,7 +131,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-git-hooks.ps
 （RuoYi-Vue2 模板 / MCERP 前端）升级时，按以下流程把新壳层同步进 `web/`，同时保留本插件的页面与接口：
 
 1. **确认自有文件已提交**（升级时不能被壳层覆盖或删除）：
-   - `web/src/views/custompanel/`（`page/`、`field/`、`action/`、`render/`）
+   - `web/src/views/custompanel/`（`page/`、`designer/`、`action/`、`render/`）
    - `web/src/api/custompanel.js`
    - 壳层配置改动：`web/vue.config.js`、`web/.env.*`、`web/public/`（wujie 子应用相关）
 2. **同步壳层**（`<壳层目录>` 为上游新版本解压目录，排除自有页面与接口）：

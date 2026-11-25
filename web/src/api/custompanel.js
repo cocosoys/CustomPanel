@@ -3,7 +3,7 @@ import request from '@/utils/request'
 /**
  * CustomPanel 插件 API 封装
  * baseURL 由 SOYS 契约注入（生产 = /api/plugins/CustomPanel，开发 = VUE_APP_BASE_API 代理）
- * 路径与后端 Controller 类级前缀一一对应：/panel/page、/panel/field、/panel/action、/panel/record
+ * 路径与后端 Controller 类级前缀一一对应：/panel/page、/panel/action、/panel/layout、/panel/event、/panel/record、/panel/managed
  */
 
 /* ================= 页面定义 ================= */
@@ -27,23 +27,6 @@ export function removePage(pageIds) {
   return request({ url: '/panel/page/' + pageIds, method: 'delete' })
 }
 
-/* ================= 字段定义 ================= */
-export function listField(params) {
-  return request({ url: '/panel/field/list', method: 'get', params })
-}
-export function getField(fieldId) {
-  return request({ url: '/panel/field/' + fieldId, method: 'get' })
-}
-export function addField(data) {
-  return request({ url: '/panel/field', method: 'post', data })
-}
-export function editField(fieldId, data) {
-  return request({ url: '/panel/field/' + fieldId, method: 'put', data })
-}
-export function removeField(fieldIds) {
-  return request({ url: '/panel/field/' + fieldIds, method: 'delete' })
-}
-
 /* ================= 动作定义 ================= */
 export function listAction(params) {
   return request({ url: '/panel/action/list', method: 'get', params })
@@ -63,6 +46,44 @@ export function removeAction(actionIds) {
 /** 执行动作（COMMAND/HTTP/INTERNAL 由后端按类型分派；data 可带 recordId/params 参与占位符插值） */
 export function executeAction(actionId, data) {
   return request({ url: '/panel/action/execute/' + actionId, method: 'post', data })
+}
+/**
+ * 执行设计器内联命令（仅 HTTP / INTERNAL，COMMAND 后端强拒绝）。
+ * data = { type, target, params, pageId, recordId }，不落库。
+ */
+export function executeInline(data) {
+  return request({ url: '/panel/action/execute-inline', method: 'post', data })
+}
+
+/* ================= 页面设计器 · 布局（confJson 单源） ================= */
+export function layoutDetail(pageId) {
+  return request({ url: '/panel/layout/detail/' + pageId, method: 'get' })
+}
+export function saveLayout(data) {
+  return request({ url: '/panel/layout/save', method: 'post', data })
+}
+export function publishLayout(pageId) {
+  return request({ url: '/panel/layout/publish/' + pageId, method: 'put' })
+}
+export function removeLayout(layoutId) {
+  return request({ url: '/panel/layout/remove/' + layoutId, method: 'delete' })
+}
+
+/* ================= 页面设计器 · 事件绑定 ================= */
+export function listEvent(params) {
+  return request({ url: '/panel/event/list', method: 'get', params })
+}
+export function getEvent(eventId) {
+  return request({ url: '/panel/event/detail/' + eventId, method: 'get' })
+}
+export function addEvent(data) {
+  return request({ url: '/panel/event/add', method: 'post', data })
+}
+export function editEvent(eventId, data) {
+  return request({ url: '/panel/event/update/' + eventId, method: 'put', data })
+}
+export function removeEvent(eventIds) {
+  return request({ url: '/panel/event/remove/' + eventIds, method: 'delete' })
 }
 
 /* ================= 自由模式记录 ================= */

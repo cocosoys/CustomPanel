@@ -98,8 +98,9 @@ export const constantRoutes = [
 const routeBindings = {
   [moduleRoot]: { component: Layout, name: 'CustomPanelErpRoot' },
   [moduleRoot + '/page']: { component: () => import('@/views/custompanel/page/index'), name: 'CustomPanelPage' },
-  [moduleRoot + '/field']: { component: () => import('@/views/custompanel/field/index'), name: 'CustomPanelField' },
   [moduleRoot + '/action']: { component: () => import('@/views/custompanel/action/index'), name: 'CustomPanelAction' },
+  // 页面设计器（侧边栏独立菜单「页面设计器」/ 页面管理「设计」快捷入口）：/custompanel-erp/designer
+  [moduleRoot + '/designer']: { component: () => import('@/views/custompanel/designer/index'), name: 'CustomPanelDesigner' },
   // 页面渲染器（页面管理「打开」进入），沿用同一前缀：/custompanel-erp/view/:pageId
   // 动态段自身含 '/'，不会被 buildStaticRoutes 当成模块根的一级子路由，故补一个中间目录节点。
   [moduleRoot + '/view']: { component: NestedRouterView, name: 'CustomPanelView' },

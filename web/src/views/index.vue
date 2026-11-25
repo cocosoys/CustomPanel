@@ -5,7 +5,7 @@
         <h2>自定义面板（CustomPanel）</h2>
         <p>
           欢迎回来，<b>{{ nickName || name }}</b>。这里是自定义面板的配置台，
-          提供页面、字段与动作的统一配置，并按页面定义渲染数据表单。
+          提供页面、布局设计与动作的统一配置，并按页面定义渲染数据表单。
         </p>
       </el-col>
       <el-col :sm="24" :lg="8">
@@ -13,7 +13,7 @@
           <div slot="header"><b>快捷入口</b></div>
           <div style="line-height: 2.4">
             <el-button type="primary" size="mini" plain icon="el-icon-document" @click="go(moduleRoot + '/page')">页面管理</el-button>
-            <el-button type="success" size="mini" plain icon="el-icon-s-grid" @click="go(moduleRoot + '/field')">字段管理</el-button>
+            <el-button type="success" size="mini" plain icon="el-icon-edit" @click="go(moduleRoot + '/designer')">页面设计器</el-button>
             <el-button type="warning" size="mini" plain icon="el-icon-s-operation" @click="go(moduleRoot + '/action')">动作管理</el-button>
           </div>
         </el-card>

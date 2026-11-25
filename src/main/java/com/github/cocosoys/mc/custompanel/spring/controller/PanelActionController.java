@@ -2,6 +2,7 @@ package com.github.cocosoys.mc.custompanel.spring.controller;
 
 import com.github.cocosoys.mc.custompanel.spring.entity.PanelAction;
 import com.github.cocosoys.mc.custompanel.spring.entity.vo.ActionExecuteRequest;
+import com.github.cocosoys.mc.custompanel.spring.entity.vo.InlineExecuteRequest;
 import com.github.cocosoys.mc.custompanel.spring.service.IPanelActionService;
 import com.github.cocosoys.mc.soyshttpovermc.annotations.ApiName;
 import com.github.cocosoys.mc.soyshttpovermc.annotations.ApiPermission;
@@ -80,5 +81,13 @@ public class PanelActionController {
                               @RequestBody ActionExecuteRequest request,
                               CredentialPresentation credential) {
         return actionService.execute(actionId, request, credential);
+    }
+
+    @ApiName("执行内联命令")
+    @ApiPermission("custompanel-erp:action:execute")
+    @PostMapping("/execute-inline")
+    public AjaxResult executeInline(@RequestBody InlineExecuteRequest request,
+                                    CredentialPresentation credential) {
+        return actionService.executeInline(request, credential);
     }
 }

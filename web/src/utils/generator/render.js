@@ -18,10 +18,20 @@ const isAttr = makeMap(
 )
 
 function vModel(self, dataObject, defaultValue) {
-  dataObject.props.value = defaultValue
+  // 父组件 v-model 的 value 落在 $attrs（本组件只声明 conf prop）：
+  // 优先用它回显，否则始终渲染 defaultValue，会把用户输入重置掉。
+  const bound = self.$attrs ? self.$attrs.value : undefined
+  dataObject.props.value = (bound === undefined || bound === null) ? defaultValue : bound
 
+  // 转发 Element 控件的原生事件给父组件，供事件分发器挂载 onChange / onClick。
   dataObject.on.input = val => {
     self.$emit('input', val)
+  }
+  dataObject.on.change = val => {
+    self.$emit('change', val)
+  }
+  dataObject.on.click = () => {
+    self.$emit('click')
   }
 }
 
@@ -111,7 +121,7 @@ export default {
     Object.keys(confClone).forEach(key => {
       const val = confClone[key]
       if (key === 'vModel') {
-        vModel(this, dataObject, confClone.defaultValue)
+        return // 延后绑定，避免 conf 中的 on 键覆盖 input/change/click 处理器
       } else if (dataObject[key]) {
         dataObject[key] = val
       } else if (!isAttr(key)) {
@@ -120,6 +130,9 @@ export default {
         dataObject.attrs[key] = val
       }
     })
+    if (confClone.vModel) {
+      vModel(this, dataObject, confClone.defaultValue)
+    }
     return h(this.conf.tag, dataObject, children)
   },
   props: ['conf']

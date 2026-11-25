@@ -67,8 +67,8 @@
       <el-table-column label="操作" align="center" width="310" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button size="mini" type="text" icon="el-icon-view" @click="handleOpen(scope.row)">打开</el-button>
+          <el-button size="mini" type="text" icon="el-icon-edit-outline" @click="handleDesign(scope.row)">设计</el-button>
           <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(scope.row)">修改</el-button>
-          <el-button size="mini" type="text" icon="el-icon-tickets" @click="handleField(scope.row)">字段</el-button>
           <el-button size="mini" type="text" icon="el-icon-caret-right" @click="handleAction(scope.row)">动作</el-button>
           <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(scope.row)">删除</el-button>
         </template>
@@ -258,9 +258,9 @@ export default {
     handleOpen(row) {
       this.$router.push({ path: '/custompanel-erp/view/' + row.pageId })
     },
-    /** 跳转字段管理（预选页面）：/custompanel-erp/field?pageId= */
-    handleField(row) {
-      this.$router.push({ path: '/custompanel-erp/field', query: { pageId: row.pageId } })
+    /** 打开页面设计器（预选页面）：/custompanel-erp/designer?pageId= */
+    handleDesign(row) {
+      this.$router.push({ path: '/custompanel-erp/designer', query: { pageId: row.pageId } })
     },
     /** 跳转动作管理（预选页面）：/custompanel-erp/action?pageId= */
     handleAction(row) {

@@ -4,18 +4,21 @@ import com.github.cocosoys.mc.custompanel.managed.ManagedEntityHandler;
 import com.github.cocosoys.mc.custompanel.managed.ManagedEntityRegistry;
 import com.github.cocosoys.mc.custompanel.managed.impl.DemoItemHandler;
 import com.github.cocosoys.mc.custompanel.spring.controller.PanelActionController;
-import com.github.cocosoys.mc.custompanel.spring.controller.PanelFieldController;
+import com.github.cocosoys.mc.custompanel.spring.controller.PanelEventController;
+import com.github.cocosoys.mc.custompanel.spring.controller.PanelLayoutController;
 import com.github.cocosoys.mc.custompanel.spring.controller.PanelManagedController;
 import com.github.cocosoys.mc.custompanel.spring.controller.PanelPageController;
 import com.github.cocosoys.mc.custompanel.spring.controller.PanelRecordController;
 import com.github.cocosoys.mc.custompanel.spring.impl.ManagedEntityServiceImpl;
 import com.github.cocosoys.mc.custompanel.spring.impl.PanelActionServiceImpl;
-import com.github.cocosoys.mc.custompanel.spring.impl.PanelFieldServiceImpl;
+import com.github.cocosoys.mc.custompanel.spring.impl.PanelEventServiceImpl;
+import com.github.cocosoys.mc.custompanel.spring.impl.PanelLayoutServiceImpl;
 import com.github.cocosoys.mc.custompanel.spring.impl.PanelPageServiceImpl;
 import com.github.cocosoys.mc.custompanel.spring.impl.PanelRecordServiceImpl;
 import com.github.cocosoys.mc.custompanel.spring.service.IManagedEntityService;
 import com.github.cocosoys.mc.custompanel.spring.service.IPanelActionService;
-import com.github.cocosoys.mc.custompanel.spring.service.IPanelFieldService;
+import com.github.cocosoys.mc.custompanel.spring.service.IPanelEventService;
+import com.github.cocosoys.mc.custompanel.spring.service.IPanelLayoutService;
 import com.github.cocosoys.mc.custompanel.spring.service.IPanelPageService;
 import com.github.cocosoys.mc.custompanel.spring.service.IPanelRecordService;
 import com.github.cocosoys.mc.mcerp.ErpMenus;
@@ -63,17 +66,20 @@ public class PanelExpansion extends McerpExpansion {
 
     private final CustomPanel plugin;
     private final IPanelPageService pageService;
-    private final IPanelFieldService fieldService;
     private final IPanelActionService actionService;
     private final IPanelRecordService recordService;
+    private final IPanelLayoutService layoutService;
+    private final IPanelEventService eventService;
     private final ManagedEntityRegistry managedRegistry;
     private final IManagedEntityService managedService;
 
     public PanelExpansion(CustomPanel plugin) {
         this.plugin = plugin;
-        this.fieldService = new PanelFieldServiceImpl();
         this.actionService = new PanelActionServiceImpl(plugin);
         this.recordService = new PanelRecordServiceImpl();
+        // 设计器双表：布局为字段唯一真源（含旧数据迁移），事件绑定供 schema 下发
+        this.layoutService = new PanelLayoutServiceImpl(plugin);
+        this.eventService = new PanelEventServiceImpl(plugin);
         // 托管实体注册表：演示实体（demo-item）由 config.yml 控制开关，默认开启；
         // 业务插件经 CustomPanel.getInstance().registerManagedEntity(handler) 注册
         this.managedRegistry = new ManagedEntityRegistry();
@@ -81,8 +87,10 @@ public class PanelExpansion extends McerpExpansion {
             this.managedRegistry.register(new DemoItemHandler());
         }
         this.managedService = new ManagedEntityServiceImpl(managedRegistry);
-        // 删除页面需级联清理其字段、动作与记录 → 页面服务反向依赖另三个服务
-        this.pageService = new PanelPageServiceImpl(fieldService, actionService, recordService, managedRegistry);
+        // 删除页面需级联清理其布局、事件、动作与记录 → 页面服务反向依赖各子服务；
+        // 旧 panel_field 遗留记录由页面服务内联兜底清理（field 服务 P4 已删除）
+        this.pageService = new PanelPageServiceImpl(actionService, recordService,
+                layoutService, eventService, managedRegistry);
     }
 
     /** 业务插件注册托管实体（幂等，同名覆盖）；返回是否生效。 */
@@ -186,9 +194,9 @@ public class PanelExpansion extends McerpExpansion {
      * 菜单树：模块本身即侧边栏顶级菜单（{@link #displayName()}="自定义面板"），
      * 此处只声明其下的叶子菜单，不再额外套一层同名目录（避免"自定义面板 → 自定义面板"重复层级）。
      * <p>component 不手写——{@code ErpMenus} 自动拼接
-     * {@code pageDirRoot()+"/"+menuId}（{@code /web/plugins/CustomPanel/custompanel-erp/page|field|action}），
+     * {@code pageDirRoot()+"/"+menuId}（{@code /web/plugins/CustomPanel/custompanel-erp/page|action|designer}），
      * 主应用取插件前缀后的子路径下发 {@code props.path}/{@code router-push}
-     * （{@code /custompanel-erp/page|field|action}），与前端路由严格对齐。
+     * （{@code /custompanel-erp/page|action|designer}），与前端路由严格对齐。
      * menu 绑定各自 Controller，按钮由 {@code ControllerPermScanner}
      * 从 {@code @ApiName}/{@code @ApiPermission} 自动投影，无需手写。
      */
@@ -200,8 +208,11 @@ public class PanelExpansion extends McerpExpansion {
                 // 记录按 pageId 归属页面、托管实体由页面渲染时读取，
                 // 故其按钮权限统一挂在「页面管理」菜单下（permsFrom 作用于最近一次 menu）。
                 .permsFrom(PanelRecordController.class, PanelManagedController.class)
-                .menu("field", "字段管理", "list", PanelFieldController.class)
-                .menu("action", "动作管理", "flash-on", PanelActionController.class);
+                .menu("action", "动作管理", "flash-on", PanelActionController.class)
+                // 独立「页面设计器」顶级菜单：布局按钮来自 PanelLayoutController，
+                // 事件按钮（actions: list/query/add/edit/remove）同挂此菜单下。
+                .menu("designer", "页面设计器", "edit", PanelLayoutController.class)
+                .permsFrom(PanelEventController.class);
     }
 
     /** 待登记端点（本类不写端点）。 */
@@ -209,9 +220,10 @@ public class PanelExpansion extends McerpExpansion {
     protected List<Object> buildControllers() {
         return Arrays.asList(
                 new PanelPageController(pageService),
-                new PanelFieldController(fieldService),
                 new PanelActionController(actionService),
                 new PanelRecordController(recordService),
-                new PanelManagedController(managedService));
+                new PanelManagedController(managedService),
+                new PanelLayoutController(layoutService),
+                new PanelEventController(eventService));
     }
 }
